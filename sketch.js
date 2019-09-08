@@ -61,8 +61,12 @@ function setup() {
 
 function draw() {
   background("black");
-  sceneSelector();
 
+  sceneSelector();
+  noFill();
+  stroke("white");
+  rect(1, 1, width-1, height-1);
+  noStroke();
 }
 
 let atrList = [];
@@ -189,16 +193,12 @@ function keyReleased() {
 }
 
 function keyPressed() {
-  if (currentScene == 2){
-    if (playing){
-      if (keyCode === 32){
-        let newShot = createSprite(playerX, 550);
-        fire.play();
-        newShot.addImage(shot);
-        newShot.scale = 0.3;
-        shots.add(newShot);
-      }
-    }
+  if (currentScene == 2 && playing && keyCode === 32){
+      let newShot = createSprite(playerX, 550);
+      fire.play();
+      newShot.addImage(shot);
+      newShot.scale = 0.3;
+      shots.add(newShot);
   }
 }
 
@@ -214,6 +214,10 @@ function movePlayer() {
 function drawLoadingScreen() {
   if (!themeSong.isPlaying()) themeSong.play();
   image(startScreen, 0, 0);
+
+  fill("white");
+  textSize(20);
+  text("Made by Ove Jorgensen", 275, 430);
 }
 
 function drawMainMenu() {

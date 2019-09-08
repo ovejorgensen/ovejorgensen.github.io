@@ -12,9 +12,23 @@
     * {
       font-family: galagaFont;
     }
+
+    html, body {
+      height: 100%;
+    }
     body {
-      padding: 0; margin: 0;
-    } 
+      margin: 0;
+      display: flex;
+
+      /* This centers our sketch horizontally. */
+      justify-content: center;
+
+      /* This centers our sketch vertically. */
+      align-items: center;
+
+      background-color: black;
+      }
+  
     </style>
     <script src="p5.js"></script>
     <script src="../lib/p5.play.js"></script>
