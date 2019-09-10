@@ -1,6 +1,9 @@
 //images used
 let ship1, ship2, enemy1, enemy2, enemy3, heart, shot, startScreen, logo;
-
+//animations
+let bossAnimation;
+//JSON objects
+let leaderboardJSON;
 //sounds used
 let fire, themeSong, levelStart, enemyDead, enemyCapture, coin;
 
@@ -14,7 +17,13 @@ function preload() {
   heart = loadImage("images/heart.png");
   shot = loadImage("images/shot.png");
   startScreen = loadImage("images/start_screen.png");
-  logo = loadImage("images/logo.png");
+  logo = loadImage('images/logo.png');
+
+  //Load animations
+  bossAnimation = loadAnimation("images/boss_animation/boss00.png", "images/boss_animation/boss12.png")
+
+  //Load JSON object
+  leaderboardJSON = loadJSON("leaderboard.json");
 
   //Load sounds
   fire = loadSound("sounds/fire.mp3");
@@ -43,8 +52,11 @@ let currentScore = 0;
 let shots;
 let enemies;
 let enemyShots;
+let bossGroup;
+
 //enemy variables
 let left = false;
+let enemyCounter;
 //time tracking
 let currentFrame;
 
@@ -56,6 +68,7 @@ function setup() {
   enemies = new Group();
   enemyGroup = new Group();
   enemyShots = new Group();
+
   currentScene = 0;
 }
 
@@ -76,54 +89,35 @@ let completes = [];
 let rounds = [];
 
 let loopCount1 = 0;
-let loopCount2 = 0;
-let loopCount3 = 0;
-let waveOne = false;
+
+let lastFromWave = true;
+let stageCount = 1;
+
 function drawGame() {
   themeSong.stop();
 
-  if(!playing) currentFrame = frameCount;
+  if(boss==true) bossFight();
+  else {
+    waveHandler();
+    if(enemyCounter == 0){
+      //Reset wave variables
+      atrList = [];
+      enemyGroup = new Group();
+      angles = [];
+      completes = [];
+      rounds = [];
   
-  if(!waveOne){
-    waveOne=true;
-    enemyGenerator(8, -50, 500, enemy1, [250, 350]);
-    enemyGenerator(8, 800, 500, enemy2, [540, 350]);
-    enemyGenerator(8, 200, -100, enemy3, [250, 350]);
-    // enemyGenerator(4, 500, -100, enemy2);
-  }
-
-  if(frameCount < currentFrame + 100) {
-    fill("lightblue");
-    textSize(35);
-    text("STAGE 1", 300, 300);
-  }
-
-  //draws the wave each iteration, and adds a new enemy every 5th frame
-  let counter = 10;
-  //First wave (bottom left)
-  for(let i=0; i<=7; i++){
-    if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 340);
-    counter+=5;
-    if(currentFrame+counter > currentFrame+5) loopCount1++;
-  }
-  // //Second wave (bottom right)
-  if(frameCount > currentFrame){
-    for(let i=8; i<=15; i++){
-      if(frameCount > currentFrame+counter && loopCount2>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 340);
-      counter+=5;
-      if(currentFrame+counter > currentFrame+5) loopCount2++;
+      loopCount1 = 0;
+  
+      lastFromWave = true;
+      stageCount++;
+  
+      //Reset boss variables
+      boss=true;
+      bossGroup = new Group();
+      firstBoss = true;
     }
   }
-  if(frameCount > currentFrame+20){
-    for(let i=16; i<=23; i++){
-      if(frameCount > currentFrame+counter+20 && loopCount3>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 340);
-      counter+=5;
-      if(currentFrame+counter > currentFrame+5) loopCount3++;
-    }
-  }
-
-
-
   player();
   shotHandler();
   enemyShotHandler();
@@ -134,6 +128,102 @@ function drawGame() {
 
   drawSprites();
   gameStats();
+}
+
+let boss = false;
+let firstBoss;
+function bossFight() {
+  if(firstBoss){
+    currentFrame = frameCount;
+    firstBoss = false;
+    let thisBoss = createSprite(400, -200);
+    thisBoss.addAnimation("normal", bossAnimation);
+    thisBoss.changeAnimation("normal");
+    thisBoss.friction = 0.1;
+    bossGroup.add(thisBoss);
+    print(bossGroup[0]);
+  }
+  if(frameCount < currentFrame + 100) {
+    fill("lightblue");
+    textSize(35);
+    text("BOSS INCOMING", 200, 300);
+  }
+
+  if(round(bossGroup[0].position.y) >= 100){
+    let rand = round(random(0, 30));
+    if(rand == 10){
+      let newShot1 = createSprite(bossGroup[0].position.x-30, bossGroup[0].position.y);
+      let newShot2 = createSprite(bossGroup[0].position.x+30, bossGroup[0].position.y);
+      fire.play();
+      newShot1.addImage(shot);
+      newShot2.addImage(shot);
+      enemyShots.add(newShot1);
+      enemyShots.add(newShot2);
+    }
+
+    if(bossGroup[0].overlap(shots)) {
+
+      for(let j=0; j<shots.length; j++){
+        if(shots[j].overlap(bossGroup[0])) shots[j].remove();
+      }
+
+      bossGroup[0].scale -= 0.05;
+      if(bossGroup[0].scale < 0.2){
+        bossGroup[0].remove();
+        currentFrame = frameCount;
+        waveFrame = frameCount;
+        boss = false;
+        firstBoss = false;
+      }
+    }
+  }
+  else bossGroup[0].attractionPoint(1, 400, 100);
+}
+
+let waveFrame;
+function waveHandler() {
+  if(!playing){
+    currentFrame = frameCount;
+    waveFrame = frameCount;
+  } 
+  
+  if(lastFromWave){
+    lastFromWave=false;
+    enemyGenerator(8, -50, 500, enemy1, [250, 350]);
+    enemyGenerator(8, 800, 500, enemy2, [540, 350]);
+    enemyGenerator(8, -50, 200, enemy3, [250, 350]);
+    //enemyGenerator(8, 800, 100, enemy1, [540, 350]);
+    enemyCounter=enemyGroup.length;
+  }
+
+  if(frameCount < waveFrame + 100) {
+    fill("lightblue");
+    textSize(35);
+    text("STAGE "+stageCount, 300, 300);
+    if(stageCount % 2 == 0) currentFrame=0;
+  }
+
+  //draws the wave each iteration, and adds a new enemy every 5th frame
+  let counter = 10;
+  //First wave (bottom left)
+  for(let i=0; i<=7; i++){
+    if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
+    counter+=5;
+    if(currentFrame+counter > currentFrame+5) loopCount1++;
+  }
+  //Second wave (bottom right)
+  if(frameCount > currentFrame){
+    for(let i=8; i<=15; i++){
+      if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
+      counter+=5;
+      if(currentFrame+counter > currentFrame+5) loopCount1++;
+    }
+    for(let i=16; i<=23; i++){
+      if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
+      counter+=5;
+      if(currentFrame+counter > currentFrame+5) loopCount1++;
+    }
+  }
 }
 
 function gameOver(){
@@ -188,6 +278,11 @@ function keyReleased() {
       }
       else if (menuArrow == 2) currentScene = 3
       else currentScene = 0;
+    }
+  }
+  else if(currentScene==3){
+    if (keyCode === ESCAPE){
+      currentScene=1;
     }
   }
 }
@@ -274,6 +369,7 @@ function enemyShotHandler(){
 
 let xlist = [];
 let ylist = [];
+let last = [];
 //Generates a predefined amount of enemies
 function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
 
@@ -284,7 +380,11 @@ function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
     thisSprite.friction = 0.1;
     enemyGroup.add(thisSprite);
 
-    append(angles, 0);
+    if(i<=15) append(angles, 0);
+    else{
+      append(angles, 4.5);
+      append(last, false);
+    } 
     append(completes, false);
     append(rounds, false);
     append(xlist, 0);
@@ -311,13 +411,12 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
       if(n<=7) spinner(n, centerX, centerY, [ylist[n], xlist[n]]);
       if(n>7 && n<= 15) spinner(n, centerX, centerY, [xlist[n], ylist[n]]);
       if(angles[n]>7.5){
-        print("ja?");
         rounds[n] = false;
         atrList[n] = [x, y];
       }
     }
     //Chekcs if the sprite has reached the position where circular motion has to be commenced
-    else if(round(enemyGroup[n].position.x) >= firstCondition && round(enemyGroup[n].position.y) >= secondCondition){
+    else if(round(enemyGroup[n].position.x) >= firstCondition){
       rounds[n] = true;
     }
 
@@ -336,7 +435,7 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
     //   enemyDead.play();
     //   currentScore+=100;
     //   enemyGroup[n].remove();
-    // }
+    //}
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
@@ -345,45 +444,49 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
 function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition){
   if(completes[n]) return true;
   else{
-    //after the circular motion spot has been hit (rounds(n) set to true when this happens)
-    //keep spinning until a set angle has been reached before continuing
-    if(rounds[n]){
-      if(n>15) spinner(n, centerX, centerY, [xlist[n], ylist[n]]);
-      if(angles[n]>7.5){
-        print("ja?");
-        rounds[n] = false;
-        atrList[n] = [x, y];
-      }
-    }
-    //Chekcs if the sprite has reached the position where circular motion has to be commenced
-    else if(round(enemyGroup[n].position.x) <= firstCondition && round(enemyGroup[n].position.y) <= secondCondition){
-      xlist[n] = centerX + radius * cos(angles[n]);
-      ylist[n] = centerY + radius * sin(angles[n]);
-      atrList[n] = [ylist[n], xlist[n]];
-      angles[n] = angles[n] + speed;
-      rounds[n] = true;
-    }
-
     //Check if the enemy has reached the final position before adding it to the enemies group
     //where the enemyHandler funciton takes care of the next movements
-    if(round(enemyGroup[n].position.y) >= y){
+    if(last[n] && round(enemyGroup[n].position.y) <= y){
       enemyGroup[n].setSpeed(0);
-
+      
       enemies.add(enemyGroup[n]);
       completes[n] = true;
       return true;
     }
 
-    //check if enemy is dead
-    if(enemyGroup[n].overlap(shots)) {
-      enemyDead.play();
-      currentScore+=100;
-      enemyGroup[n].remove();
+    //after the circular motion spot has been hit (rounds(n) set to true when this happens)
+    //keep spinning until a set angle has been reached before continuing
+    else if(rounds[n]){
+      //spinner(n, centerX, centerY, [ylist[n], xlist[n]]);
+
+      xlist[n] = centerX + radius * cos(angles[n]);
+      ylist[n] = centerY + radius * sin(angles[n]);
+      atrList[n] = [ylist[n], xlist[n]];
+      angles[n] = angles[n] + speed;
+
+      if(angles[n]>7.5){
+        rounds[n] = false;
+        last[n] = true;
+        atrList[n] = [x, y];
+      }
     }
+    //Chekcs if the sprite has reached the position where circular motion has to be commenced
+    else if(round(enemyGroup[n].position.x) >= firstCondition && round(enemyGroup[n].position.y) >= secondCondition){
+      print("nÅ");
+      rounds[n] = true;
+    }
+
+    //check if enemy is dead
+    // if(enemyGroup[n].overlap(shots)) {
+    //   enemyDead.play();
+    //   currentScore+=100;
+    //   enemyGroup[n].remove();
+    // }
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
 }
+
 
 
 function enemyHandler() {
@@ -417,6 +520,7 @@ function enemyHandler() {
           if(shots[j].overlap(enemies[i])) shots[j].remove();
         }
         enemies[i].remove();
+        enemyCounter--;
       }
 
     }
@@ -425,7 +529,24 @@ function enemyHandler() {
 
 
 function drawLeaderboard() {
+  fill("white");
+  textSize(30);
+  text("LEADERBOARD", 325, 100);
+  textSize(15);
+  text("Press ESC to return to menu", 20, height-18);
+  stroke("white");
+  noFill();
+  rect(50, 150, width-100, height-200);
+  noStroke();
 
+  textSize(23);
+  for(let i=0; i<=leaderboardJSON.players.length-1; i++){
+    fill(leaderboardJSON.colors[i]);
+    text("NO."+ (i+1)+"  " +leaderboardJSON.players[i].name, 70, 200+i*50);
+    text(" - Score: "+leaderboardJSON.players[i].score, 320, 200+i*50);
+    text(" - Stage " + leaderboardJSON.players[i].stage, 680, 200+i*50);
+
+  }
 }
 
 function gameStats() {
