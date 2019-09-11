@@ -1,7 +1,7 @@
 //images used
-let ship1, ship2, enemy1, enemy2, enemy3, heart, shot, startScreen, logo;
+let ship1, ship2, heart, shot, enemyShot, startScreen, logo;
 //animations
-let bossAnimation;
+let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion;
 //JSON objects
 let leaderboardJSON;
 //sounds used
@@ -11,16 +11,18 @@ function preload() {
   //Load images
   ship1 = loadImage("images/ship1.png");
   ship2 = loadImage("images/ship2.png");
-  enemy1 = loadImage("images/enemy1.png");
-  enemy2 = loadImage("images/enemy2.png");
-  enemy3 = loadImage("images/enemy3.png");
   heart = loadImage("images/heart.png");
-  shot = loadImage("images/shot.png");
+  shot = loadImage("images/friendly_shot.png");
+  enemyShot = loadImage("images/shot.png");
   startScreen = loadImage("images/start_screen.png");
   logo = loadImage('images/logo.png');
 
   //Load animations
-  bossAnimation = loadAnimation("images/boss_animation/boss00.png", "images/boss_animation/boss12.png")
+  bossAnimation = loadAnimation("images/boss_animation/boss00.png", "images/boss_animation/boss12.png");
+  enemyAnim = loadAnimation("images/enemy_anim/enemy00.png", "images/enemy_anim/enemy14.png");
+  enemyAnim2 = loadAnimation("images/second_anim/enemy00.png", "images/second_anim/enemy14.png");
+  enemyAnim3 = loadAnimation("images/third_anim/enemy00.png", "images/third_anim/enemy14.png");
+  explosion = loadAnimation("images/death_anim/death00.png", "images/death_anim/death15.png");
 
   //Load JSON object
   leaderboardJSON = loadJSON("leaderboard.json");
@@ -53,6 +55,8 @@ let shots;
 let enemies;
 let enemyShots;
 let bossGroup;
+let bossShots;
+let explosionGroup;
 
 //enemy variables
 let left = false;
@@ -68,6 +72,8 @@ function setup() {
   enemies = new Group();
   enemyGroup = new Group();
   enemyShots = new Group();
+  bossShots = new Group();
+  explosionGroup = new Group();
 
   currentScene = 0;
 }
@@ -87,6 +93,7 @@ let enemyGroup;
 let angles = [];
 let completes = [];
 let rounds = [];
+let explosionList = [];
 
 let loopCount1 = 0;
 
@@ -103,9 +110,11 @@ function drawGame() {
       //Reset wave variables
       atrList = [];
       enemyGroup = new Group();
+      enemies = new Group();
       angles = [];
       completes = [];
       rounds = [];
+      dead = [];
   
       loopCount1 = 0;
   
@@ -121,6 +130,8 @@ function drawGame() {
   player();
   shotHandler();
   enemyShotHandler();
+  bossShotHandler();
+  explosionHandler();
 
   enemyHandler();
 
@@ -141,7 +152,6 @@ function bossFight() {
     thisBoss.changeAnimation("normal");
     thisBoss.friction = 0.1;
     bossGroup.add(thisBoss);
-    print(bossGroup[0]);
   }
   if(frameCount < currentFrame + 100) {
     fill("lightblue");
@@ -155,10 +165,10 @@ function bossFight() {
       let newShot1 = createSprite(bossGroup[0].position.x-30, bossGroup[0].position.y);
       let newShot2 = createSprite(bossGroup[0].position.x+30, bossGroup[0].position.y);
       fire.play();
-      newShot1.addImage(shot);
-      newShot2.addImage(shot);
-      enemyShots.add(newShot1);
-      enemyShots.add(newShot2);
+      newShot1.addImage(enemyShot);
+      newShot2.addImage(enemyShot);
+      bossShots.add(newShot1);
+      bossShots.add(newShot2);
     }
 
     if(bossGroup[0].overlap(shots)) {
@@ -180,6 +190,18 @@ function bossFight() {
   else bossGroup[0].attractionPoint(1, 400, 100);
 }
 
+function explosionHandler(){
+  for(let i=0; i<explosionList.length; i++){
+    if(frameCount<explosionList[i]+60){
+      explosionGroup[i].changeAnimation("regular");
+    }
+    else{
+      explosionGroup[i].remove();
+      explosionList.shift();
+    }
+  }
+}
+
 let waveFrame;
 function waveHandler() {
   if(!playing){
@@ -189,9 +211,9 @@ function waveHandler() {
   
   if(lastFromWave){
     lastFromWave=false;
-    enemyGenerator(8, -50, 500, enemy1, [250, 350]);
-    enemyGenerator(8, 800, 500, enemy2, [540, 350]);
-    enemyGenerator(8, -50, 200, enemy3, [250, 350]);
+    enemyGenerator(8, -50, 500, "first", [250, 350]);
+    enemyGenerator(8, 800, 500, "second", [540, 350]);
+    enemyGenerator(8, -50, 200, "third", [250, 350]);
     //enemyGenerator(8, 800, 100, enemy1, [540, 350]);
     enemyCounter=24;
   }
@@ -207,19 +229,25 @@ function waveHandler() {
   let counter = 10;
   //First wave (bottom left)
   for(let i=0; i<=7; i++){
-    if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
+    if(!dead[i]){
+      if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
+    }
     counter+=5;
     if(currentFrame+counter > currentFrame+5) loopCount1++;
   }
   //Second wave (bottom right)
   if(frameCount > currentFrame){
     for(let i=8; i<=15; i++){
-      if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
+      if(!dead[i]){
+        if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
+      }
       counter+=5;
       if(currentFrame+counter > currentFrame+5) loopCount1++;
     }
     for(let i=16; i<=23; i++){
-      if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
+      if(!dead[i]){
+        if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
+      }
       counter+=5;
       if(currentFrame+counter > currentFrame+5) loopCount1++;
     }
@@ -367,16 +395,34 @@ function enemyShotHandler(){
   }
 }
 
+function bossShotHandler(){
+  for(let i=0; i<bossShots.length; i++){
+    bossShots[i].position.y += 5;
+    if(bossShots[i].position.y > height) bossShots[i].remove();
+    if(currentPlayer.overlap(bossShots)) {
+      bossShots[i].remove();
+      lives=0;
+    }
+  }
+}
+
 let xlist = [];
 let ylist = [];
 let last = [];
+let dead = [];
 //Generates a predefined amount of enemies
 function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
 
   for(let i=0; i<amount; i++){
     let thisSprite = createSprite(startX, startY);
     thisSprite.scale = 0.3;
-    thisSprite.addImage(enemyImg);
+
+    thisSprite.addAnimation("first", enemyAnim);
+    thisSprite.addAnimation("second", enemyAnim2);
+    thisSprite.addAnimation("third", enemyAnim3);
+    
+    thisSprite.changeAnimation(enemyImg);
+    
     thisSprite.friction = 0.1;
     enemyGroup.add(thisSprite);
 
@@ -385,6 +431,7 @@ function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
       append(angles, 4.5);
       append(last, false);
     } 
+    append(dead, false);
     append(completes, false);
     append(rounds, false);
     append(xlist, 0);
@@ -437,6 +484,13 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
       for(let j=0; j<shots.length; j++){
         if(shots[j].overlap(enemyGroup[n])) shots[j].remove();
       }
+      dead[n] = true;
+
+      let thisExplosion = createSprite(enemyGroup[n].position.x, enemyGroup[n].position.y);
+      thisExplosion.addAnimation("regular", explosion);
+      explosionGroup.add(thisExplosion);
+      append(explosionList, frameCount);
+
       enemyGroup[n].position.x = -200;
       enemyGroup[n].position.y = 10000;
       enemyCounter--;
@@ -482,6 +536,13 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
       for(let j=0; j<shots.length; j++){
         if(shots[j].overlap(enemyGroup[n])) shots[j].remove();
       }
+      dead[n] = true;
+      
+      let thisExplosion = createSprite(enemyGroup[n].position.x, enemyGroup[n].position.y);
+      thisExplosion.addAnimation("regular", explosion);
+      explosionGroup.add(thisExplosion);
+      append(explosionList, frameCount);
+
       enemyGroup[n].position.x = -200;
       enemyGroup[n].position.y = 10000;
       enemyCounter--;
@@ -491,15 +552,13 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
   }
 }
 
-
-
 function enemyHandler() {
   let randomShot = round(random(0, 1000));
     for(let i=0; i<enemies.length; i++){
       if(i==randomShot){
         let newShot = createSprite(enemies[i].position.x, enemies[i].position.y);
         fire.play();
-        newShot.addImage(shot);
+        newShot.addImage(enemyShot);
         newShot.scale = 0.3;
         enemyShots.add(newShot);
       }
@@ -523,7 +582,14 @@ function enemyHandler() {
         for(let j=0; j<shots.length; j++){
           if(shots[j].overlap(enemies[i])) shots[j].remove();
         }
-        enemies[i].remove();
+
+        let thisExplosion = createSprite(enemies[i].position.x, enemies[i].position.y);
+        thisExplosion.addAnimation("regular", explosion);
+        explosionGroup.add(thisExplosion);
+        append(explosionList, frameCount);
+
+        enemies[i].position.x = 400;
+        enemies[i].position.y = 1000;
         enemyCounter--;
       }
 
