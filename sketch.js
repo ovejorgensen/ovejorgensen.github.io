@@ -193,7 +193,7 @@ function waveHandler() {
     enemyGenerator(8, 800, 500, enemy2, [540, 350]);
     enemyGenerator(8, -50, 200, enemy3, [250, 350]);
     //enemyGenerator(8, 800, 100, enemy1, [540, 350]);
-    enemyCounter=enemyGroup.length;
+    enemyCounter=24;
   }
 
   if(frameCount < waveFrame + 100) {
@@ -430,12 +430,17 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
       return true;
     }
 
-    // //check if enemy is dead
-    // if(enemyGroup[n].overlap(shots)) {
-    //   enemyDead.play();
-    //   currentScore+=100;
-    //   enemyGroup[n].remove();
-    //}
+    //check if enemy is dead
+    if(enemyGroup[n].overlap(shots)) {
+      enemyDead.play();
+      currentScore+=100;
+      for(let j=0; j<shots.length; j++){
+        if(shots[j].overlap(enemyGroup[n])) shots[j].remove();
+      }
+      enemyGroup[n].position.x = -200;
+      enemyGroup[n].position.y = 10000;
+      enemyCounter--;
+    }
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
@@ -457,12 +462,7 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
     //after the circular motion spot has been hit (rounds(n) set to true when this happens)
     //keep spinning until a set angle has been reached before continuing
     else if(rounds[n]){
-      //spinner(n, centerX, centerY, [ylist[n], xlist[n]]);
-
-      xlist[n] = centerX + radius * cos(angles[n]);
-      ylist[n] = centerY + radius * sin(angles[n]);
-      atrList[n] = [ylist[n], xlist[n]];
-      angles[n] = angles[n] + speed;
+      spinner(n, centerX, centerY, [ylist[n], xlist[n]]);
 
       if(angles[n]>7.5){
         rounds[n] = false;
@@ -472,16 +472,20 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
     }
     //Chekcs if the sprite has reached the position where circular motion has to be commenced
     else if(round(enemyGroup[n].position.x) >= firstCondition && round(enemyGroup[n].position.y) >= secondCondition){
-      print("nÅ");
       rounds[n] = true;
     }
 
     //check if enemy is dead
-    // if(enemyGroup[n].overlap(shots)) {
-    //   enemyDead.play();
-    //   currentScore+=100;
-    //   enemyGroup[n].remove();
-    // }
+    if(enemyGroup[n].overlap(shots)) {
+      enemyDead.play();
+      currentScore+=100;
+      for(let j=0; j<shots.length; j++){
+        if(shots[j].overlap(enemyGroup[n])) shots[j].remove();
+      }
+      enemyGroup[n].position.x = -200;
+      enemyGroup[n].position.y = 10000;
+      enemyCounter--;
+    }
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
