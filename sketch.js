@@ -22,7 +22,7 @@ function preload() {
   enemyAnim = loadAnimation("images/enemy_anim/enemy00.png", "images/enemy_anim/enemy14.png");
   enemyAnim2 = loadAnimation("images/second_anim/enemy00.png", "images/second_anim/enemy14.png");
   enemyAnim3 = loadAnimation("images/third_anim/enemy00.png", "images/third_anim/enemy14.png");
-  explosion = loadAnimation("images/death_anim/death00.png", "images/death_anim/death15.png");
+  explosion = loadAnimation("images/death_anim/death00.png", "images/death_anim/death03.png");
 
   //Load JSON object
   leaderboardJSON = loadJSON("leaderboard.json");
@@ -41,6 +41,7 @@ const LOADING_SCENE = 0;
 const MAIN_MENU_SCENE = 1;
 const MAIN_GAME_SCENE = 2;
 const LEADERBOARD_SCENE = 3;
+const GAME_OVER_SCENE = 4;
 let currentScene;
 
 let menuArrow = 1;
@@ -74,6 +75,8 @@ function setup() {
   enemyShots = new Group();
   bossShots = new Group();
   explosionGroup = new Group();
+
+  explosion.frameDelay = 10;
 
   currentScene = 0;
 }
@@ -139,6 +142,8 @@ function drawGame() {
 
   drawSprites();
   gameStats();
+
+  if(lives<=0) currentScene=4;
 }
 
 let boss = false;
@@ -192,7 +197,7 @@ function bossFight() {
 
 function explosionHandler(){
   for(let i=0; i<explosionList.length; i++){
-    if(frameCount<explosionList[i]+60){
+    if(frameCount<explosionList[i]+40){
       explosionGroup[i].changeAnimation("regular");
     }
     else{
@@ -254,14 +259,19 @@ function waveHandler() {
   }
 }
 
+let username = "";
 function gameOver(){
-  if(lives==0){
-    fill("lightblue");
-    textSize(35);
-    text("GAME OVER", 300, 300);
-    return false;
-  }
-  else return true;
+  fill("lightblue");
+  textSize(35);
+  text("GAME OVER", 300, 300);
+  textSize(15);
+  fill("white");
+  text("Fill in your GAMERNAME: " + username, 200, 350);  
+  gameStats();
+}
+
+function keyTyped(){
+  if(currentScene == 4 && username.length < 6) username += key;
 }
 
 function sceneSelector() {
@@ -274,31 +284,63 @@ function sceneSelector() {
       break;
     case 2:
       movePlayer();
-      if(gameOver()) drawGame();
+      drawGame();
       break;
     case 3:
       drawLeaderboard();
       break;
+    case 4:
+      gameOver();
   }
 }
 
+function reset(){
+  currentScene = 1;
+
+  atrList = [];
+  enemyGroup;
+  angles = [];
+  completes = [];
+  rounds = [];
+  explosionList = [];
+
+  loopCount1 = 0;
+
+  lastFromWave = true;
+  stageCount = 1;
+
+  enemyGroup.removeSprites();
+  shots.removeSprites();
+  enemies.removeSprites();
+  enemyShots.removeSprites();
+  bossShots.removeSprites();
+  explosionGroup.removeSprites();
+
+  menuArrow = 1;
+  lives = 3;
+  playerX = 300;
+  playing = false;
+  currentScore = 0;
+  left = false;
+  currentPlayer.remove();
+
+  username = "";
+  backBool = true;
+
+  xlist = [];
+  ylist = [];
+  last = [];
+  dead = [];
+
+  boss = false;
+  firstBoss = true;
+}
+
 function keyReleased() {
-  if (currentScene == 0){
-    if (keyCode === 32){
-      currentScene = 1;
-    }
-  }
+  if (currentScene == 0 && keyCode === 32) currentScene = 1;
   else if (currentScene == 1){
-    if (keyCode === DOWN_ARROW){
-      if (menuArrow == 1 || menuArrow == 2){
-        menuArrow++;
-      }
-    }
-    if (keyCode === UP_ARROW){
-      if (menuArrow == 2 || menuArrow == 3){
-        menuArrow--;
-      }
-    }
+    if (keyCode === DOWN_ARROW && menuArrow == 1 || menuArrow == 2) menuArrow++;
+    if (keyCode === UP_ARROW && menuArrow == 2 || menuArrow == 3) menuArrow--;
     if (keyCode === ENTER || keyCode === 32){
       if (menuArrow == 1){
         currentScene = 2;
@@ -308,13 +350,15 @@ function keyReleased() {
       else currentScene = 0;
     }
   }
-  else if(currentScene==3){
-    if (keyCode === ESCAPE){
-      currentScene=1;
-    }
+  else if(currentScene == 3 && keyCode === ESCAPE) currentScene=1;
+  else if(currentScene == 4){
+    if(keyCode === BACKSPACE) backBool = true;
+    if(username.length>2 && keyCode===ENTER) reset();
   }
 }
 
+
+let backBool = true;
 function keyPressed() {
   if (currentScene == 2 && playing && keyCode === 32){
       let newShot = createSprite(playerX, 550);
@@ -322,6 +366,12 @@ function keyPressed() {
       newShot.addImage(shot);
       newShot.scale = 0.3;
       shots.add(newShot);
+  }
+  if(currentScene == 4 ) {
+    if(keyCode === BACKSPACE && backBool == true){
+      username = username.slice(0, -1);
+      backBool = false;
+    }
   }
 }
 
