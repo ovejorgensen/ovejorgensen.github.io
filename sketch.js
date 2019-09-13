@@ -1,5 +1,5 @@
 //images used
-let ship1, ship2, heart, shot, enemyShot, startScreen, logo;
+let ship1, ship2, heart, shot, enemyShot, startScreen, logo, powerup;
 //animations
 let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion;
 //JSON objects
@@ -16,6 +16,7 @@ function preload() {
   enemyShot = loadImage("images/shot.png");
   startScreen = loadImage("images/start_screen.png");
   logo = loadImage('images/logo.png');
+  powerup = loadImage('images/powerup.png');
 
   //Load animations
   bossAnimation = loadAnimation("images/boss_animation/boss00.png", "images/boss_animation/boss12.png");
@@ -58,6 +59,9 @@ let enemyShots;
 let bossGroup;
 let bossShots;
 let explosionGroup;
+let powerGroup;
+let powerShotGroupLeft;
+let powerShotGroupRight;
 
 //enemy variables
 let left = false;
@@ -75,8 +79,13 @@ function setup() {
   enemyShots = new Group();
   bossShots = new Group();
   explosionGroup = new Group();
+  powerGroup = new Group();
+  powerShotGroupLeft = new Group();
+  powerShotGroupRight = new Group();
 
   explosion.frameDelay = 10;
+  powerTimer = millis();
+
 
   currentScene = 0;
 
@@ -110,29 +119,7 @@ function drawGame() {
   stars();
 
   if(boss==true) bossFight();
-  else {
-    waveHandler();
-    if(enemyCounter == 0){
-      //Reset wave variables
-      atrList = [];
-      enemyGroup = new Group();
-      enemies = new Group();
-      angles = [];
-      completes = [];
-      rounds = [];
-      dead = [];
-  
-      loopCount1 = 0;
-  
-      lastFromWave = true;
-      stageCount++;
-  
-      //Reset boss variables
-      boss=true;
-      bossGroup = new Group();
-      firstBoss = true;
-    }
-  }
+  else waveHandler();
   player();
   shotHandler();
   enemyShotHandler();
@@ -140,6 +127,7 @@ function drawGame() {
   explosionHandler();
 
   enemyHandler();
+  powerupHandler();
 
   playing = true;
 
@@ -147,6 +135,38 @@ function drawGame() {
   gameStats();
 
   if(lives<=0) currentScene=4;
+}
+
+let powerTimer;
+let poweredUp = false;
+function powerupHandler() {
+  if(!poweredUp){
+    if(millis() > powerTimer + 10000){
+      powerGroup.removeSprites();
+      let randX = random(100, width-300);
+      let powerSprite = createSprite(randX, -20);
+      powerSprite.addImage(powerup);
+      powerSprite.scale = 2;
+      powerGroup.add(powerSprite);
+      powerTimer = millis();
+      print("hallo");
+    }
+    if(powerGroup[0] !== undefined) {
+      powerGroup[0].position.y+=10;
+      if(powerGroup[0].overlap(currentPlayer)){
+        powerTimer = millis();
+        powerGroup.removeSprites();
+        poweredUp = true;
+      }
+    }
+  }
+  else{
+    if(millis() > powerTimer + 5000){
+      powerTimer = millis() + 15000;
+      poweredUp = false;
+    }
+    else return true;
+  }
 }
 
 let boss = false;
@@ -202,10 +222,16 @@ function bossFight() {
       if (bossGroup[0].position.x >= 100) bossGroup[0].position.x -= bosSpeed;
       else left = true; 
     }
-    if(bossGroup[0].overlap(shots)) {
+    if(bossGroup[0].overlap(shots) || bossGroup[0].overlap(powerShotGroupLeft) || bossGroup[0].overlap(powerShotGroupRight)) {
       //shots.bounce(bossGroup[0]);
       for(let j=0; j<shots.length; j++){
         if(shots[j].overlap(bossGroup[0])) shots[j].remove();
+      }
+      for(let j=0; j<powerShotGroupLeft.length; j++){
+        if(powerShotGroupLeft[j].overlap(bossGroup[0])) powerShotGroupLeft[j].remove();
+      }
+      for(let j=0; j<powerShotGroupRight.length; j++){
+        if(powerShotGroupRight[j].overlap(bossGroup[0])) powerShotGroupRight[j].remove();
       }
       currentScore+=10;
       bossGroup[0].scale -= 0.05;
@@ -285,6 +311,27 @@ function waveHandler() {
       counter+=5;
       if(currentFrame+counter > currentFrame+5) loopCount1++;
     }
+  }
+  //resets everything if the player has died
+  if(enemyCounter == 0){
+    //Reset wave variables
+    atrList = [];
+    enemyGroup.removeSprites();
+    enemies.removeSprites();
+    angles = [];
+    completes = [];
+    rounds = [];
+    dead = [];
+
+    loopCount1 = 0;
+
+    lastFromWave = true;
+    stageCount++;
+
+    //Reset boss variables
+    boss=true;
+    bossGroup = new Group();
+    firstBoss = true;
   }
 }
 
@@ -400,6 +447,16 @@ function keyPressed() {
       newShot.addImage(shot);
       newShot.scale = 0.3;
       shots.add(newShot);
+      if(poweredUp){
+        let newShot2 = createSprite(playerX, 550);
+        let newShot3 = createSprite(playerX, 550);
+        newShot2.addImage(shot);
+        newShot3.addImage(shot);
+        newShot2.scale = 0.3;
+        newShot3.scale = 0.3;
+        powerShotGroupLeft.add(newShot2);
+        powerShotGroupRight.add(newShot3);
+      }
   }
   if(currentScene == 4 ) {
     if(keyCode === BACKSPACE && backBool == true){
@@ -465,10 +522,24 @@ function player() {
   }
 }
 
+
+//Handles the shots fired by the player, if the player is powered up it shoots three shots at the same time.
 function shotHandler() {
   for(let i=0; i<shots.length; i++){
     shots[i].position.y -= 5;
     if(shots[i].position.y < 0) shots[i].remove();
+  }
+
+  //handles powered up shots
+  for(let i=0; i<powerShotGroupLeft.length; i++){
+    powerShotGroupLeft[i].position.y -= 5;
+    powerShotGroupLeft[i].position.x -= 1;
+    if(powerShotGroupLeft[i].position.y < 0 || powerShotGroupLeft[i].position.x < 0) powerShotGroupLeft[i].remove();
+  }
+  for(let i=0; i<powerShotGroupRight.length; i++){
+    powerShotGroupRight[i].position.y -= 5;
+    powerShotGroupRight[i].position.x += 1;
+    if(powerShotGroupRight[i].position.y < 0 || powerShotGroupRight[i].position.x > 700) powerShotGroupRight[i].remove();
   }
 }
 
@@ -566,23 +637,9 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
     }
 
     //check if enemy is dead
-    if(enemyGroup[n].overlap(shots)) {
-      enemyDead.play();
-      currentScore+=100;
-      for(let j=0; j<shots.length; j++){
-        if(shots[j].overlap(enemyGroup[n])) shots[j].remove();
-      }
-      dead[n] = true;
-
-      let thisExplosion = createSprite(enemyGroup[n].position.x, enemyGroup[n].position.y);
-      thisExplosion.addAnimation("regular", explosion);
-      explosionGroup.add(thisExplosion);
-      append(explosionList, frameCount);
-
-      enemyGroup[n].position.x = -200;
-      enemyGroup[n].position.y = 10000;
-      enemyCounter--;
-    }
+    enemyHit(enemyGroup[n], shots, -200, 10000, n);
+    enemyHit(enemyGroup[n], powerShotGroupLeft, -200, 10000, n);     
+    enemyHit(enemyGroup[n], powerShotGroupRight, -200, 10000, n);
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
@@ -616,25 +673,11 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
     else if(round(enemyGroup[n].position.x) >= firstCondition && round(enemyGroup[n].position.y) >= secondCondition){
       rounds[n] = true;
     }
-
+    
     //check if enemy is dead
-    if(enemyGroup[n].overlap(shots)) {
-      enemyDead.play();
-      currentScore+=100;
-      for(let j=0; j<shots.length; j++){
-        if(shots[j].overlap(enemyGroup[n])) shots[j].remove();
-      }
-      dead[n] = true;
-      
-      let thisExplosion = createSprite(enemyGroup[n].position.x, enemyGroup[n].position.y);
-      thisExplosion.addAnimation("regular", explosion);
-      explosionGroup.add(thisExplosion);
-      append(explosionList, frameCount);
-
-      enemyGroup[n].position.x = -200;
-      enemyGroup[n].position.y = 10000;
-      enemyCounter--;
-    }
+    enemyHit(enemyGroup[n], shots, -200, 10000, n);
+    enemyHit(enemyGroup[n], powerShotGroupLeft, -200, 10000, n);     
+    enemyHit(enemyGroup[n], powerShotGroupRight, -200, 10000, n);
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
@@ -664,24 +707,30 @@ function enemyHandler() {
           }
         }
         
-      if(enemies[i].overlap(shots)) {
-        enemyDead.play();
-        currentScore+=100;
-        for(let j=0; j<shots.length; j++){
-          if(shots[j].overlap(enemies[i])) shots[j].remove();
-        }
-
-        let thisExplosion = createSprite(enemies[i].position.x, enemies[i].position.y);
-        thisExplosion.addAnimation("regular", explosion);
-        explosionGroup.add(thisExplosion);
-        append(explosionList, frameCount);
-
-        enemies[i].position.x = 400;
-        enemies[i].position.y = 1000;
-        enemyCounter--;
-      }
-
+      enemyHit(enemies[i], shots, 400, 1000, i);
+      enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);     
+      enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
     }
+}
+
+function enemyHit(currentGroup, shotGroup, moveToX, moveToY, n) {
+  if(currentGroup.overlap(shotGroup)) {
+    enemyDead.play();
+    currentScore+=100;
+    for(let j=0; j<shotGroup.length; j++){
+      if(shotGroup[j].overlap(currentGroup)) shotGroup[j].remove();
+    }
+
+    let thisExplosion = createSprite(currentGroup.position.x, currentGroup.position.y);
+    thisExplosion.addAnimation("regular", explosion);
+    explosionGroup.add(thisExplosion);
+    append(explosionList, frameCount);
+
+    currentGroup.position.x = moveToX;
+    currentGroup.position.y = moveToY;
+    atrList[n] = [moveToX, moveToY];
+    enemyCounter--;
+  }
 }
 
 let starSpeed = 2;
@@ -750,8 +799,9 @@ function gameStats() {
   //current score
   text(currentScore, 820, 280);
   //current amount of lives
-  for(let i=0; i<lives; i++){
-    image(ship1, 800+i*50, 400, 40, 40);
-  }
+  for(let i=0; i<lives; i++) image(ship1, 800+i*50, 400, 40, 40);
+
+  //shows current powerup
+  if(poweredUp) image(powerup, 800, 500, 30, 30);
 }
 
