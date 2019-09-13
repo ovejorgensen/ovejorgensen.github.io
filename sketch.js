@@ -79,6 +79,8 @@ function setup() {
   explosion.frameDelay = 10;
 
   currentScene = 0;
+
+  starGenerator();
 }
 
 function draw() {
@@ -342,11 +344,10 @@ function keyReleased() {
   if (currentScene == 0 && keyCode === 32) currentScene = 1;
   else if (currentScene == 1){
     
-    if (keyCode === DOWN_ARROW && menuArrow == 1 || menuArrow == 2){
+    if (keyCode === DOWN_ARROW && (menuArrow == 1 || menuArrow == 2)){
       menuArrow++;
-      print(menuArrow, keyCode);
     } 
-    if (keyCode === UP_ARROW && menuArrow == 2 || menuArrow == 3) menuArrow--;
+    if (keyCode === UP_ARROW && (menuArrow == 2 || menuArrow == 3)) menuArrow--;
     if (keyCode === ENTER || keyCode === 32){
       if (menuArrow == 1){
         currentScene = 2;
@@ -655,35 +656,31 @@ function enemyHandler() {
 let starSpeed = 2;
 let initialSpeed = 1;
 let y = 0;
-let y2 = 0;
 let starList = [];
-let currentList;
-let starColors = ["red", "yellow", "green", "blue", "white", "turquoise", "purple"];
+let starColors = [[255, 0, 0], [0, 0, 255], [0, 128, 0], [64, 224, 208], [255, 255, 255], [128, 0, 128], [255, 255, 0]];
 let initial = true;
-let switcher = true;
-function stars(){
-  if (initial){
+
+function starGenerator() {
     for(let i=0; i<100; i++){
       randX = round(random(0, width));
       randY = round(random(-height, height));
       randColor = random(starColors);
-      append(starList, [randX, randY, randColor]);
+      randAlph = round(random(1, 254));
+      append(starList, [randX, randY, randColor, randAlph, true]);
     }
-    initial = false;
-  }
+}
 
+function stars(){
   y+=initialSpeed * starSpeed;
-  if (y>=height){
-    let nextList = [];
-    for(let i=0; i<starList.length; i++){
-      append(nextList, [starList[i][0], starList[i][1]-y, starList[i][2]]);
-    }
-    starList = starList.concat(nextList);
-    y=0;
-  }
+  if (y>=height) y=0;
   
   for(let i=0; i<starList.length; i++){
-    fill(starList[i][2]);
+    if(starList[i][3] >= 255) starList[i][4] = false;
+    else if(starList[i][3] <= 0) starList[i][4] = true;
+    if(starList[i][3] <= 255 && starList[i][4] == true) starList[i][3] = starList[i][3]+10;
+    if(starList[i][3] >= 0 && starList[i][4] == false) starList[i][3] = starList[i][3]-10;
+    
+    fill(starList[i][2][0], starList[i][2][1], starList[i][2][2], starList[i][3]);
     ellipse(starList[i][0], starList[i][1] + y, 4);
   } 
 }
