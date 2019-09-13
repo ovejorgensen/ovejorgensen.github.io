@@ -152,6 +152,7 @@ function drawGame() {
 let boss = false;
 let firstBoss;
 let bossLives = 15;
+let bosSpeed;
 function bossFight() {
   if(firstBoss){
     currentFrame = frameCount;
@@ -162,6 +163,7 @@ function bossFight() {
     thisBoss.friction = 0.1;
     bossGroup.add(thisBoss);
     bossLives = 15;
+    bosSpeed = 1.5;
   }
   if(frameCount < currentFrame + 100) {
     fill("lightblue");
@@ -192,21 +194,30 @@ function bossFight() {
       bossShots.add(newShot1);
       bossShots.add(newShot2);
     }
-
+    if (left) {
+      if (bossGroup[0].position.x <= 700) bossGroup[0].position.x += bosSpeed;
+      else left = false;
+    } 
+    else {
+      if (bossGroup[0].position.x >= 100) bossGroup[0].position.x -= bosSpeed;
+      else left = true; 
+    }
     if(bossGroup[0].overlap(shots)) {
       //shots.bounce(bossGroup[0]);
       for(let j=0; j<shots.length; j++){
         if(shots[j].overlap(bossGroup[0])) shots[j].remove();
       }
-
+      currentScore+=10;
       bossGroup[0].scale -= 0.05;
       bossLives--;
+      bosSpeed+=0.5;
       if(bossGroup[0].scale < 0.25){
         bossGroup[0].remove();
         currentFrame = frameCount;
         waveFrame = frameCount;
         boss = false;
         firstBoss = false;
+        currentScore+=990;
       }
     }
   }
@@ -414,6 +425,10 @@ function drawLoadingScreen() {
   fill("white");
   textSize(20);
   text("Made by Ove Jorgensen", 275, 430);
+  strokeWeight(3);
+  stroke("white");
+  line(552, 411, 541, 432);
+  strokeWeight(1);
 }
 
 function drawMainMenu() {
