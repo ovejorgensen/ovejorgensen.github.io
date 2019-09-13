@@ -151,6 +151,7 @@ function drawGame() {
 
 let boss = false;
 let firstBoss;
+let bossLives = 15;
 function bossFight() {
   if(firstBoss){
     currentFrame = frameCount;
@@ -160,12 +161,25 @@ function bossFight() {
     thisBoss.changeAnimation("normal");
     thisBoss.friction = 0.1;
     bossGroup.add(thisBoss);
+    bossLives = 15;
   }
   if(frameCount < currentFrame + 100) {
     fill("lightblue");
     textSize(35);
     text("BOSS INCOMING", 200, 300);
   }
+
+  noFill();
+  stroke("white");
+  rect(250, 20, 300, 30);
+  fill("red");
+  let count =0;
+  for(let i=0; i<300; i+=20){
+    if (count < bossLives) rect(252 + i, 22, 16, 26);
+    count++;
+  }
+  noFill();
+  noStroke();
 
   if(round(bossGroup[0].position.y) >= 100){
     let rand = round(random(0, 30));
@@ -180,13 +194,14 @@ function bossFight() {
     }
 
     if(bossGroup[0].overlap(shots)) {
-
+      //shots.bounce(bossGroup[0]);
       for(let j=0; j<shots.length; j++){
         if(shots[j].overlap(bossGroup[0])) shots[j].remove();
       }
 
       bossGroup[0].scale -= 0.05;
-      if(bossGroup[0].scale < 0.2){
+      bossLives--;
+      if(bossGroup[0].scale < 0.25){
         bossGroup[0].remove();
         currentFrame = frameCount;
         waveFrame = frameCount;
@@ -338,6 +353,7 @@ function reset(){
 
   boss = false;
   firstBoss = true;
+  bossLives = 15;
 }
 
 function keyReleased() {
