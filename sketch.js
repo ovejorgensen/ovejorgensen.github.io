@@ -105,6 +105,7 @@ let stageCount = 1;
 
 function drawGame() {
   themeSong.stop();
+  stars();
 
   if(boss==true) bossFight();
   else {
@@ -311,6 +312,7 @@ function reset(){
 
   enemyGroup.removeSprites();
   shots.removeSprites();
+  bossGroup.removeSprites();
   enemies.removeSprites();
   enemyShots.removeSprites();
   bossShots.removeSprites();
@@ -339,7 +341,11 @@ function reset(){
 function keyReleased() {
   if (currentScene == 0 && keyCode === 32) currentScene = 1;
   else if (currentScene == 1){
-    if (keyCode === DOWN_ARROW && menuArrow == 1 || menuArrow == 2) menuArrow++;
+    
+    if (keyCode === DOWN_ARROW && menuArrow == 1 || menuArrow == 2){
+      menuArrow++;
+      print(menuArrow, keyCode);
+    } 
     if (keyCode === UP_ARROW && menuArrow == 2 || menuArrow == 3) menuArrow--;
     if (keyCode === ENTER || keyCode === 32){
       if (menuArrow == 1){
@@ -646,7 +652,41 @@ function enemyHandler() {
     }
 }
 
+let starSpeed = 2;
+let initialSpeed = 1;
+let y = 0;
+let y2 = 0;
+let starList = [];
+let currentList;
+let starColors = ["red", "yellow", "green", "blue", "white", "turquoise", "purple"];
+let initial = true;
+let switcher = true;
+function stars(){
+  if (initial){
+    for(let i=0; i<100; i++){
+      randX = round(random(0, width));
+      randY = round(random(-height, height));
+      randColor = random(starColors);
+      append(starList, [randX, randY, randColor]);
+    }
+    initial = false;
+  }
 
+  y+=initialSpeed * starSpeed;
+  if (y>=height){
+    let nextList = [];
+    for(let i=0; i<starList.length; i++){
+      append(nextList, [starList[i][0], starList[i][1]-y, starList[i][2]]);
+    }
+    starList = starList.concat(nextList);
+    y=0;
+  }
+  
+  for(let i=0; i<starList.length; i++){
+    fill(starList[i][2]);
+    ellipse(starList[i][0], starList[i][1] + y, 4);
+  } 
+}
 
 function drawLeaderboard() {
   fill("white");
