@@ -1,5 +1,7 @@
 //images used
 let ship1, ship2, heart, shot, enemyShot, startScreen, logo, powerup;
+//The video
+let film;
 //animations
 let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion, playerHit, diver;
 //JSON objects
@@ -104,6 +106,7 @@ let doneCount;
 //time tracking
 let currentFrame;
 let waveFrame;
+let videoCount;
 
 //list containing the explosions caused by enemies and the player dying
 let explosionList = [];
@@ -121,10 +124,18 @@ let starList = [];
 let starColors = [[255, 0, 0], [0, 0, 255], [0, 128, 0], [64, 224, 208], [255, 255, 255], [128, 0, 128], [255, 255, 0]];
 let initial = true;
 
+//Constants, if the program does not run smoothly on your computer you may reduce the star amount, creating fewer stars.
+const STAR_AMOUNT = 300;
+
 function setup() {
   createCanvas(1000, 600);
   textFont("galagaFont");
   noCursor();
+
+  //Load video
+  film = createVideo("video/trailer.mp4");
+  film.time(88);
+  film.hide();
 
   //initializes all the sprite groups
   shots = new Group();
@@ -154,13 +165,41 @@ function setup() {
 function draw() {
   background("black");
 
+
   sceneSelector();
+
+  //the white border around the canvas
   noFill();
   stroke("white");
   rect(1, 1, width-1, height-1);
   noStroke();
+  videoHandler();
+
 }
 
+//This function selects the scene to display according to what the currentScene variable is set to
+function sceneSelector() {
+  switch (currentScene){
+    case 0:
+      drawLoadingScreen();
+      break;
+    case 1:
+      drawMainMenu();
+      break;
+    case 2:
+      movePlayer();
+      drawGame();
+      break;
+    case 3:
+      drawLeaderboard();
+      break;
+    case 4:
+      gameOver();
+  }
+}
+
+//This function is the function that is called whenever the gamescene is on the actual game
+//it takes care of calling all the functions that make up the game
 function drawGame() {
   themeSong.stop();
   stars();
@@ -185,6 +224,9 @@ function drawGame() {
   if(lives<=0) currentScene=4;
 }
 
+
+//This function sends out a powerup at certain points, if the player gets one it waits for a while
+//before sending a new one out.
 function powerupHandler() {
   if(!poweredUp){
     if(millis() > powerTimer + 10000){
@@ -214,7 +256,8 @@ function powerupHandler() {
   }
 }
 
-
+//This function handles the entire bossfight stage, when each regular stage is done, this function is 
+//"activated" until the boss is dead, telling the program that a regular stage needs to be done again.
 function bossFight() {
   if(firstBoss){
     currentFrame = frameCount;
@@ -265,7 +308,6 @@ function bossFight() {
       else left = true; 
     }
     if(bossGroup[0].overlap(shots) || bossGroup[0].overlap(powerShotGroupLeft) || bossGroup[0].overlap(powerShotGroupRight)) {
-      //shots.bounce(bossGroup[0]);
       for(let j=0; j<shots.length; j++){
         if(shots[j].overlap(bossGroup[0])) shots[j].remove();
       }
@@ -300,6 +342,9 @@ function bossFight() {
   else bossGroup[0].attractionPoint(1, 400, 100);
 }
 
+//This function updates the explosions that are created when an enemy is killed
+//The explosion has 4 frames, and this function uses the framecount to ensure that after those
+//4 frames have been shown the animation is removed.
 function explosionHandler(){
   for(let i=0; i<explosionList.length; i++){
     if(frameCount<explosionList[i]+40){
@@ -312,6 +357,9 @@ function explosionHandler(){
   }
 }
 
+//This function is essentially the same as the explosionHandler() function, except it takes care of 
+//showing the animation caused when the player is hit by an enemy. It is also used to show the 
+//animation of the explosion created when the boss is killed
 function playerHitHandler(){
   for(let i=0; i<playerHitList.length; i++){
     if(frameCount<playerHitList[i]+60){
@@ -324,52 +372,52 @@ function playerHitHandler(){
   }
 }
 
+//This function creates a set of enemies for each regular stage and initializes the correct functions for them at the right time
 function waveHandler() {
   if(!playing){
     currentFrame = frameCount;
     waveFrame = frameCount;
   } 
   
+  //Only once creates the enemies that the player has to fight
   if(lastFromWave){
     lastFromWave=false;
     enemyGenerator(8, -50, 500, "first", [250, 350]);
     enemyGenerator(8, 800, 500, "second", [540, 350]);
     enemyGenerator(8, -50, 200, "third", [250, 350]);
-    //enemyGenerator(8, 800, 100, enemy1, [540, 350]);
     enemyCounter=24;
   }
 
+  //Displays the text that shows the current stagecount
   if(frameCount < waveFrame + 100) {
     fill("lightblue");
     textSize(35);
     text("STAGE "+stageCount, 300, 300);
+    //This if sentece sets framecount to 0 for every other stage, creating two different ways the enemies enter the screen.
     if(stageCount % 2 == 0) currentFrame=0;
   }
 
   //draws the wave each iteration, and adds a new enemy every 5th frame
   let counter = 10;
-  //First wave (bottom left)
+  //First set of enemies from bottom left
   if(dontEnter){
     for(let i=0; i<=7; i++){
-      if(!dead[i]){
-        if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
-      }
+      //The enemy must both not be dead, and the currentFrame counter variable ensures that each enemy is created after the previous
+      //so they do not overlap each other.
+      if(!dead[i]) if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
       counter+=5;
       if(currentFrame+counter > currentFrame+5) loopCount1++;
     }
-    //Second wave (bottom right)
     if(frameCount > currentFrame){
+      //Second set from bottom right
       for(let i=8; i<=15; i++){
-        if(!dead[i]){
-          if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
-        }
+        if(!dead[i]) if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
         counter+=5;
         if(currentFrame+counter > currentFrame+5) loopCount1++;
       }
+      //Third set from top left
       for(let i=16; i<=23; i++){
-        if(!dead[i]){
-          if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
-        }
+        if(!dead[i]) if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
         counter+=5;
         if(currentFrame+counter > currentFrame+5) loopCount1++;
       }
@@ -377,27 +425,28 @@ function waveHandler() {
   }
   //resets everything if the player has died
   if(enemyCounter == 0){
-    //Reset wave variables
-    atrList = [];
-    enemyGroup.removeSprites();
-    enemies.removeSprites();
-    angles = [];
-    completes = [];
-    rounds = [];
-    dead = [];
-
-    loopCount1 = 0;
-
-    lastFromWave = true;
-    stageCount++;
-
-    //Reset boss variables
-    boss=true;
-    bossGroup = new Group();
-    firstBoss = true;
+       //Reset wave variables
+       atrList = [];
+       enemyGroup.removeSprites();
+       enemies.removeSprites();
+       angles = [];
+       completes = [];
+       rounds = [];
+       dead = [];
+   
+       loopCount1 = 0;
+   
+       lastFromWave = true;
+       stageCount++;
+   
+       //Reset boss variables
+       boss=true;
+       bossGroup = new Group();
+       firstBoss = true;
   }
 }
 
+//When the player dies, this function is called showing the game over text and prompts the player to enter his name.
 function gameOver(){
   fill("lightblue");
   textSize(35);
@@ -409,30 +458,12 @@ function gameOver(){
   currentPlayerStats = [username, currentScore, stageCount];
 }
 
+//Is only used on the game over scene to get the key that has been pressed, adding it to the username string variable
 function keyTyped(){
   if(currentScene == 4 && username.length < 6) username += key;
 }
 
-function sceneSelector() {
-  switch (currentScene){
-    case 0:
-      drawLoadingScreen();
-      break;
-    case 1:
-      drawMainMenu();
-      break;
-    case 2:
-      movePlayer();
-      drawGame();
-      break;
-    case 3:
-      drawLeaderboard();
-      break;
-    case 4:
-      gameOver();
-  }
-}
-
+//When this function is called, every global variable is wiped clean, meaning the game is ready to be restarted
 function reset(){
   currentScene = 1;
 
@@ -455,6 +486,7 @@ function reset(){
   enemyShots.removeSprites();
   bossShots.removeSprites();
   explosionGroup.removeSprites();
+  playerHitGroup.removeSprites();
 
   menuArrow = 1;
   lives = 3;
@@ -475,26 +507,55 @@ function reset(){
   boss = false;
   firstBoss = true;
   bossLives = 15;
+
+  playVideo = false;
 }
 
+function videoHandler() {
+  if(playVideo){
+    image(film, 0, 0);
+    film.size(width, height);
+    film.loop();
+    if(frameCount > videoCount + 800){
+      film.hide();
+      currentScene = 1;
+      playVideo = false;
+      film.time(88);
+    }
+  }
+}
+
+//This function is used to see when certain keys have been released. It is used in stead of keyPressed as that function would 
+//call multiple times while the player presses a button.
+let playVideo = false;
 function keyReleased() {
-  if (currentScene == 0 && keyCode === 32) currentScene = 1;
+  //checks if spacebar has been hit on the splash screen
+  if (currentScene == 0 && keyCode === 32 && !playVideo){
+    playVideo = true;
+    videoCount = frameCount;
+  } 
+  //Takes care of navigation on the menu screen
   else if (currentScene == 1){
-    
-    if (keyCode === DOWN_ARROW && (menuArrow == 1 || menuArrow == 2)){
-      menuArrow++;
-    } 
+    if (keyCode === DOWN_ARROW && (menuArrow == 1 || menuArrow == 2)) menuArrow++;
     if (keyCode === UP_ARROW && (menuArrow == 2 || menuArrow == 3)) menuArrow--;
     if (keyCode === ENTER || keyCode === 32){
       if (menuArrow == 1){
+        film.pause();
         currentScene = 2;
         levelStart.play();
       }
       else if (menuArrow == 2) currentScene = 3
-      else currentScene = 0;
+      else {
+        currentScene = 0;
+        film.pause();
+        film.time(88);
+        playVideo = false;
+      }
     }
   }
+  //Lets the player escape from the leaderboard scene
   else if(currentScene == 3 && keyCode === ESCAPE) currentScene=1;
+  //Checks if enter has been pressed and a valid name has been entered on the game over scene
   else if(currentScene == 4){
     if(keyCode === BACKSPACE) backBool = true;
     if(username.length>2 && keyCode===ENTER) reset();
@@ -539,7 +600,6 @@ function movePlayer() {
 }
 
 function drawLoadingScreen() {
-  if (!themeSong.isPlaying()) themeSong.play();
   image(startScreen, 0, 0);
 
   fill("white");
@@ -803,8 +863,9 @@ function enemyHit(currentGroup, shotGroup, moveToX, moveToY, n) {
   }
 }
 
+//This function is placed in the setup function and generates all the stars that will be displayed in the background when the game is playing
 function starGenerator() {
-    for(let i=0; i<100; i++){
+    for(let i=0; i<STAR_AMOUNT; i++){
       randX = round(random(0, width));
       randY = round(random(-height, height));
       randColor = random(starColors);
@@ -813,10 +874,13 @@ function starGenerator() {
     }
 }
 
+//Every time this function is called the stars slightly move down the screen.
 function stars(){
+  //When the y value reaches a certain point it is reset, creating the infinite scrolling effect of the star background
   y+=initialSpeed * starSpeed;
   if (y>=height) y=0;
   
+  //This for loop re-draws all the stars for each iteration, it also handles the alpha values for each star, creating the slow blinking effect the stars has
   for(let i=0; i<starList.length; i++){
     if(starList[i][3] >= 255) starList[i][4] = false;
     else if(starList[i][3] <= 0) starList[i][4] = true;
@@ -827,7 +891,6 @@ function stars(){
     ellipse(starList[i][0], starList[i][1] + y, 4);
   } 
 }
-
 
 //This function draws the leaderboard when the leaderboard scene is requested
 //if the player has not yet played it only draws the people from the json file, but if the player has completed
@@ -858,7 +921,6 @@ function drawLeaderboard() {
       continue;
     }
     if(used){
-      print("nå da");
       fill(leaderboardJSON.colors[i]);
       text("NO."+ (i+1)+"  " +leaderboardJSON.players[i-1].name, 70, 180+i*50);
       text(" - Score: "+leaderboardJSON.players[i-1].score, 320, 180+i*50);
