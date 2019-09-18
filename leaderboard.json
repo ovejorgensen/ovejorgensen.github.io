@@ -22,21 +22,21 @@
         },
         {
             "name": "Sven",
-            "score": 23030,
-            "stage": 7
+            "score": 19030,
+            "stage": 6
         },
         {
             "name": "Bowser",
-            "score": 23012,
-            "stage": 6
+            "score": 15654,
+            "stage": 5
         },
         {
             "name": "Roger",
-            "score": 22039,
-            "stage": 6
+            "score": 10456,
+            "stage": 3
         }
     ],
     "colors": [
-        "red", "orange", "yellow", "yellow", "lightgreen","lightgreen", "lightblue"
+        "red", "orange", "yellow", "yellow", "lightgreen","lightgreen", "lightblue", "lightblue"
     ]
 }   

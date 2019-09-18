@@ -1,7 +1,7 @@
 //images used
 let ship1, ship2, heart, shot, enemyShot, startScreen, logo, powerup;
 //animations
-let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion;
+let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion, playerHit, diver;
 //JSON objects
 let leaderboardJSON;
 //sounds used
@@ -24,6 +24,8 @@ function preload() {
   enemyAnim2 = loadAnimation("images/second_anim/enemy00.png", "images/second_anim/enemy14.png");
   enemyAnim3 = loadAnimation("images/third_anim/enemy00.png", "images/third_anim/enemy14.png");
   explosion = loadAnimation("images/death_anim/death00.png", "images/death_anim/death03.png");
+  playerHit = loadAnimation("images/player_hit_anim/hit00.png", "images/player_hit_anim/hit03.png");
+  diver = loadAnimation("images/diver_anim/diver00.png", "images/diver_anim/diver01.png");
 
   //Load JSON object
   leaderboardJSON = loadJSON("leaderboard.json");
@@ -46,12 +48,17 @@ const GAME_OVER_SCENE = 4;
 let currentScene;
 
 let menuArrow = 1;
+
 //player variables
 let lives = 3;
 let playerX = 300;
 let playing = false;
 let currentPlayer;
 let currentScore = 0;
+let highscore = 30000;
+let currentPlayerStats = [];
+let username = "";
+
 //Sprite Groups
 let shots;
 let enemies;
@@ -59,6 +66,7 @@ let enemyShots;
 let bossGroup;
 let bossShots;
 let explosionGroup;
+let playerHitGroup;
 let powerGroup;
 let powerShotGroupLeft;
 let powerShotGroupRight;
@@ -66,26 +74,77 @@ let powerShotGroupRight;
 //enemy variables
 let left = false;
 let enemyCounter;
+let atrList = [];
+let enemyGroup;
+let angles = [];
+let completes = [];
+let rounds = [];
+let xlist = [];
+let ylist = [];
+let last = [];
+let dead = [];
+
+//Boss variables
+let boss = false;
+let firstBoss;
+let bossLives = 15;
+let bosSpeed;
+
+//wave variables
+let loopCount1 = 0;
+let lastFromWave = true;
+let stageCount = 1;
+
+//variables for the "round" the enemies does when entering the screen
+let radius = 40;
+let speed = 0.1;
+let done = false;
+let doneCount;
+
 //time tracking
 let currentFrame;
+let waveFrame;
+
+//list containing the explosions caused by enemies and the player dying
+let explosionList = [];
+let playerHitList = [];
+
+//Powerup variables
+let powerTimer;
+let poweredUp = false;
+
+//Star background variables
+let starSpeed = 2;
+let initialSpeed = 1;
+let y = 0;
+let starList = [];
+let starColors = [[255, 0, 0], [0, 0, 255], [0, 128, 0], [64, 224, 208], [255, 255, 255], [128, 0, 128], [255, 255, 0]];
+let initial = true;
 
 function setup() {
   createCanvas(1000, 600);
   textFont("galagaFont");
   noCursor();
+
+  //initializes all the sprite groups
   shots = new Group();
   enemies = new Group();
   enemyGroup = new Group();
   enemyShots = new Group();
   bossShots = new Group();
   explosionGroup = new Group();
+  playerHitGroup = new Group();
   powerGroup = new Group();
   powerShotGroupLeft = new Group();
   powerShotGroupRight = new Group();
 
+  //sets an animation delay as the animated objects only have a few frames to switch between
   explosion.frameDelay = 10;
-  powerTimer = millis();
+  playerHit.frameDelay = 20;
+  diver.frameDelay = 30;
 
+  //initializes the timer for the powerup drop
+  powerTimer = millis();
 
   currentScene = 0;
 
@@ -102,18 +161,6 @@ function draw() {
   noStroke();
 }
 
-let atrList = [];
-let enemyGroup;
-let angles = [];
-let completes = [];
-let rounds = [];
-let explosionList = [];
-
-let loopCount1 = 0;
-
-let lastFromWave = true;
-let stageCount = 1;
-
 function drawGame() {
   themeSong.stop();
   stars();
@@ -125,6 +172,7 @@ function drawGame() {
   enemyShotHandler();
   bossShotHandler();
   explosionHandler();
+  playerHitHandler();
 
   enemyHandler();
   powerupHandler();
@@ -137,8 +185,6 @@ function drawGame() {
   if(lives<=0) currentScene=4;
 }
 
-let powerTimer;
-let poweredUp = false;
 function powerupHandler() {
   if(!poweredUp){
     if(millis() > powerTimer + 10000){
@@ -149,7 +195,6 @@ function powerupHandler() {
       powerSprite.scale = 2;
       powerGroup.add(powerSprite);
       powerTimer = millis();
-      print("hallo");
     }
     if(powerGroup[0] !== undefined) {
       powerGroup[0].position.y+=10;
@@ -169,10 +214,7 @@ function powerupHandler() {
   }
 }
 
-let boss = false;
-let firstBoss;
-let bossLives = 15;
-let bosSpeed;
+
 function bossFight() {
   if(firstBoss){
     currentFrame = frameCount;
@@ -238,12 +280,20 @@ function bossFight() {
       bossLives--;
       bosSpeed+=0.5;
       if(bossGroup[0].scale < 0.25){
-        bossGroup[0].remove();
         currentFrame = frameCount;
         waveFrame = frameCount;
         boss = false;
         firstBoss = false;
         currentScore+=990;
+
+        let thisBossHit = createSprite(bossGroup[0].position.x, bossGroup[0].position.y);
+        thisBossHit.addAnimation("explode", playerHit);
+        thisBossHit.scale = 3;
+        playerHitGroup.add(thisBossHit);
+        append(playerHitList, frameCount);
+        
+        bossGroup[0].remove();
+
       }
     }
   }
@@ -262,7 +312,18 @@ function explosionHandler(){
   }
 }
 
-let waveFrame;
+function playerHitHandler(){
+  for(let i=0; i<playerHitList.length; i++){
+    if(frameCount<playerHitList[i]+60){
+      playerHitGroup[i].changeAnimation("explode");
+    }
+    else{
+      playerHitGroup[i].remove();
+      playerHitList.shift();
+    }
+  }
+}
+
 function waveHandler() {
   if(!playing){
     currentFrame = frameCount;
@@ -288,28 +349,30 @@ function waveHandler() {
   //draws the wave each iteration, and adds a new enemy every 5th frame
   let counter = 10;
   //First wave (bottom left)
-  for(let i=0; i<=7; i++){
-    if(!dead[i]){
-      if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
-    }
-    counter+=5;
-    if(currentFrame+counter > currentFrame+5) loopCount1++;
-  }
-  //Second wave (bottom right)
-  if(frameCount > currentFrame){
-    for(let i=8; i<=15; i++){
+  if(dontEnter){
+    for(let i=0; i<=7; i++){
       if(!dead[i]){
-        if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
+        if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 100, 220+i*60, 250, 350, 250, 350);
       }
       counter+=5;
       if(currentFrame+counter > currentFrame+5) loopCount1++;
     }
-    for(let i=16; i<=23; i++){
-      if(!dead[i]){
-        if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
+    //Second wave (bottom right)
+    if(frameCount > currentFrame){
+      for(let i=8; i<=15; i++){
+        if(!dead[i]){
+          if(frameCount > currentFrame+counter && loopCount1>=i) firstWave(i, 140, 220+(i-8)*60, 450, 350, 450, 350);
+        }
+        counter+=5;
+        if(currentFrame+counter > currentFrame+5) loopCount1++;
       }
-      counter+=5;
-      if(currentFrame+counter > currentFrame+5) loopCount1++;
+      for(let i=16; i<=23; i++){
+        if(!dead[i]){
+          if(frameCount > currentFrame+counter && loopCount1>=i) waveFromTop(i, 180, 220+(i-16)*60, 250, 350, 250, 350);
+        }
+        counter+=5;
+        if(currentFrame+counter > currentFrame+5) loopCount1++;
+      }
     }
   }
   //resets everything if the player has died
@@ -335,7 +398,6 @@ function waveHandler() {
   }
 }
 
-let username = "";
 function gameOver(){
   fill("lightblue");
   textSize(35);
@@ -344,6 +406,7 @@ function gameOver(){
   fill("white");
   text("Fill in your GAMERNAME: " + username, 200, 350);  
   gameStats();
+  currentPlayerStats = [username, currentScore, stageCount];
 }
 
 function keyTyped(){
@@ -387,7 +450,7 @@ function reset(){
 
   enemyGroup.removeSprites();
   shots.removeSprites();
-  bossGroup.removeSprites();
+  if(bossGroup != undefined) bossGroup.removeSprites();
   enemies.removeSprites();
   enemyShots.removeSprites();
   bossShots.removeSprites();
@@ -550,6 +613,11 @@ function enemyShotHandler(){
     if(currentPlayer.overlap(enemyShots)) {
       enemyShots[i].remove();
       lives--;
+
+      let thisPlayerHit = createSprite(currentPlayer.position.x, currentPlayer.position.y);
+      thisPlayerHit.addAnimation("explode", playerHit);
+      playerHitGroup.add(thisPlayerHit);
+      append(playerHitList, frameCount);
     }
   }
 }
@@ -561,14 +629,16 @@ function bossShotHandler(){
     if(currentPlayer.overlap(bossShots)) {
       bossShots[i].remove();
       lives=0;
+
+      let thisPlayerHit = createSprite(currentPlayer.position.x, currentPlayer.position.y);
+      thisPlayerHit.addAnimation("explode", playerHit);
+      playerHitGroup.add(thisPlayerHit);
+      append(playerHitList, frameCount);
     }
   }
 }
 
-let xlist = [];
-let ylist = [];
-let last = [];
-let dead = [];
+
 //Generates a predefined amount of enemies
 function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
 
@@ -606,8 +676,7 @@ function spinner(n, centerX, centerY, spinWay){
   angles[n] = angles[n] + speed;
 }
 
-let radius = 40;
-let speed = 0.1;
+
 function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
   if(completes[n]) return true;
   else{
@@ -631,15 +700,20 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
     if(round(enemyGroup[n].position.y) <= y){
       enemyGroup[n].setSpeed(0);
 
+      if(!done){
+        done = true;
+        doneCount = frameCount + 300;
+      }
+
       enemies.add(enemyGroup[n]);
       completes[n] = true;
       return true;
     }
 
     //check if enemy is dead
-    enemyHit(enemyGroup[n], shots, -200, 10000, n);
-    enemyHit(enemyGroup[n], powerShotGroupLeft, -200, 10000, n);     
-    enemyHit(enemyGroup[n], powerShotGroupRight, -200, 10000, n);
+    enemyHit(enemyGroup[n], shots, -200, 10000000, n);
+    enemyHit(enemyGroup[n], powerShotGroupLeft, -200, 10000000, n);     
+    enemyHit(enemyGroup[n], powerShotGroupRight, -200, 10000000, n);
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
@@ -675,18 +749,19 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
     }
     
     //check if enemy is dead
-    enemyHit(enemyGroup[n], shots, -200, 10000, n);
-    enemyHit(enemyGroup[n], powerShotGroupLeft, -200, 10000, n);     
-    enemyHit(enemyGroup[n], powerShotGroupRight, -200, 10000, n);
+    enemyHit(enemyGroup[n], shots, -200, 10000000, n);
+    enemyHit(enemyGroup[n], powerShotGroupLeft, -200, 10000000, n);     
+    enemyHit(enemyGroup[n], powerShotGroupRight, -200, 10000000, n);
   
     enemyGroup[n].attractionPoint(1, atrList[n][0], atrList[n][1]);
   }
 }
 
+let dontEnter = true;
 function enemyHandler() {
   let randomShot = round(random(0, 1000));
     for(let i=0; i<enemies.length; i++){
-      if(i==randomShot){
+      if(i==randomShot && enemies[i].position.y < height){
         let newShot = createSprite(enemies[i].position.x, enemies[i].position.y);
         fire.play();
         newShot.addImage(enemyShot);
@@ -695,18 +770,13 @@ function enemyHandler() {
       }
       if(left){
           if(enemies[i].position.x < 700) enemies[i].position.x += 0.5;
-          else{
-            left = false;
-          }
+          else left = false;
         }
 
       else{
           if(enemies[i].position.x >= 100) enemies[i].position.x -= 0.5;
-          else{
-            left = true;
-          }
+          else left = true;
         }
-        
       enemyHit(enemies[i], shots, 400, 1000, i);
       enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);     
       enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
@@ -733,13 +803,6 @@ function enemyHit(currentGroup, shotGroup, moveToX, moveToY, n) {
   }
 }
 
-let starSpeed = 2;
-let initialSpeed = 1;
-let y = 0;
-let starList = [];
-let starColors = [[255, 0, 0], [0, 0, 255], [0, 128, 0], [64, 224, 208], [255, 255, 255], [128, 0, 128], [255, 255, 0]];
-let initial = true;
-
 function starGenerator() {
     for(let i=0; i<100; i++){
       randX = round(random(0, width));
@@ -765,6 +828,10 @@ function stars(){
   } 
 }
 
+
+//This function draws the leaderboard when the leaderboard scene is requested
+//if the player has not yet played it only draws the people from the json file, but if the player has completed
+//a round it will include the players score in the leaderboard.
 function drawLeaderboard() {
   fill("white");
   textSize(30);
@@ -775,17 +842,47 @@ function drawLeaderboard() {
   noFill();
   rect(50, 150, width-100, height-200);
   noStroke();
-
   textSize(23);
-  for(let i=0; i<=leaderboardJSON.players.length-1; i++){
-    fill(leaderboardJSON.colors[i]);
-    text("NO."+ (i+1)+"  " +leaderboardJSON.players[i].name, 70, 200+i*50);
-    text(" - Score: "+leaderboardJSON.players[i].score, 320, 200+i*50);
-    text(" - Stage " + leaderboardJSON.players[i].stage, 680, 200+i*50);
+
+  //This loop takes care of placing the players from the json file in the leaderboard
+  //it also sorts the current players score and places it in the leaderboard 
+  let used = false;
+  for(let i=0; i<=leaderboardJSON.players.length; i++){
+    //if the player has not yet played only this if-sentence will be executed to ensure the json data is the only data used in the leaderboard
+    if(currentPlayerStats[0] == undefined){
+      if(i == leaderboardJSON.players.length) continue;
+      fill(leaderboardJSON.colors[i]);
+      text("NO."+ (i+1)+"  " +leaderboardJSON.players[i].name, 70, 180+i*50);
+      text(" - Score: "+leaderboardJSON.players[i].score, 320, 180+i*50);
+      text(" - Stage " + leaderboardJSON.players[i].stage, 680, 180+i*50);
+      continue;
+    }
+    if(used){
+      print("nå da");
+      fill(leaderboardJSON.colors[i]);
+      text("NO."+ (i+1)+"  " +leaderboardJSON.players[i-1].name, 70, 180+i*50);
+      text(" - Score: "+leaderboardJSON.players[i-1].score, 320, 180+i*50);
+      text(" - Stage " + leaderboardJSON.players[i-1].stage, 680, 180+i*50);
+    }
+    else if(i == leaderboardJSON.players.length || leaderboardJSON.players[i].score <= currentPlayerStats[1]){
+      fill(leaderboardJSON.colors[i]);
+      text("NO."+ (i+1)+"  " +currentPlayerStats[0], 70, 180+i*50);
+      text(" - Score: "+currentPlayerStats[1], 320, 180+i*50);
+      text(" - Stage " + currentPlayerStats[2], 680, 180+i*50);
+      used = true;
+    }
+    else{
+      fill(leaderboardJSON.colors[i]);
+      text("NO."+ (i+1)+"  " +leaderboardJSON.players[i].name, 70, 180+i*50);
+      text(" - Score: "+leaderboardJSON.players[i].score, 320, 180+i*50);
+      text(" - Stage " + leaderboardJSON.players[i].stage, 680, 180+i*50);
+    }
 
   }
 }
 
+//This function draws the current game statistics on the left side of the screen while playing
+//it shows highscore, current player score, lives remaining and whether or not the player is powered up
 function gameStats() {
   fill("black");
   rect(width-250, 0, 250, height);
@@ -795,12 +892,12 @@ function gameStats() {
   text("SCORE", 820, 130);
   //highscore
   fill("white");
-  text(30000, 820, 160);
+  if(currentScore >= highscore) highscore = currentScore;
+  text(highscore, 820, 160);
   //current score
   text(currentScore, 820, 280);
   //current amount of lives
   for(let i=0; i<lives; i++) image(ship1, 800+i*50, 400, 40, 40);
-
   //shows current powerup
   if(poweredUp) image(powerup, 800, 500, 30, 30);
 }
