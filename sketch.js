@@ -81,6 +81,8 @@ let powerShotGroupRight;
 //enemy variables
 let left = false;
 let enemyCounter;
+let enemyShotRate = 1000;
+let enemyMoveSpeed = 0.5;
 let atrList = [];
 let enemyGroup;
 let angles = [];
@@ -442,6 +444,7 @@ function waveHandler() {
    
        lastFromWave = true;
        stageCount++;
+       if(enemyShotRate > 100) enemyShotRate -= 150;
    
        //Reset boss variables
        boss=true;
@@ -500,6 +503,8 @@ function reset(){
   currentScore = 0;
   left = false;
   currentPlayer.remove();
+  enemyShotRate = 1000;
+  enemyMoveSpeed = 0.5;
 
   username = "";
   backBool = true;
@@ -693,6 +698,7 @@ function shotHandler() {
 //and creates a new "explosion" where the player was hit. It also removes the shots when they reach the bottom of the screen.
 function enemyShotHandler(){
   for(let i=0; i<enemyShots.length; i++){
+    enemyShots[i].displace(enemyShots);
     enemyShots[i].position.y += 5;
     if(enemyShots[i].position.y > height) enemyShots[i].remove();
     if(currentPlayer.overlap(enemyShots)) {
@@ -857,29 +863,31 @@ let dontEnter = true;
 function enemyHandler() {
   //randomShot finds a random number between 0 and 1000 and if the number matches the index of the enemy currently being iterated 
   //that enemy will fire a shot. This adds an element of randomness to the game making it feel more dynamic
-  let randomShot = round(random(0, 1000));
+  let randomShot = round(random(0, enemyShotRate));
     for(let i=0; i<enemies.length; i++){
-      if(i==randomShot && enemies[i].position.y < height){
-        let newShot = createSprite(enemies[i].position.x, enemies[i].position.y);
-        fire.play();
-        newShot.addImage(enemyShot);
-        newShot.scale = 0.3;
-        enemyShots.add(newShot);
+      if (enemies[i].position.y < height){
+        if(i==randomShot){
+          let newShot = createSprite(enemies[i].position.x, enemies[i].position.y);
+          fire.play();
+          newShot.addImage(enemyShot);
+          newShot.scale = 0.3;
+          enemyShots.add(newShot);
+        }
+        if(left){
+            if(enemies[i].position.x < 700) enemies[i].position.x += enemyMoveSpeed;
+            else left = false;
+          }
+  
+        else{
+            if(enemies[i].position.x >= 100) enemies[i].position.x -= enemyMoveSpeed;
+            else left = true;
+          }
+        //all three player shot groups must be checked to see if a player has hit an enemy, the powerShotLeft and Right check for hits 
+        //when the player is powered up
+        enemyHit(enemies[i], shots, 400, 1000, i);
+        enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);     
+        enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
       }
-      if(left){
-          if(enemies[i].position.x < 700) enemies[i].position.x += 0.5;
-          else left = false;
-        }
-
-      else{
-          if(enemies[i].position.x >= 100) enemies[i].position.x -= 0.5;
-          else left = true;
-        }
-      //all three player shot groups must be checked to see if a player has hit an enemy, the powerShotLeft and Right check for hits 
-      //when the player is powered up
-      enemyHit(enemies[i], shots, 400, 1000, i);
-      enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);     
-      enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
     }
 }
 
