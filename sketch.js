@@ -32,6 +32,9 @@ function preload() {
   //Load JSON object
   leaderboardJSON = loadJSON("leaderboard.json");
 
+  //Loads the video
+  film = createVideo("video/trailer.mp4");
+
   //Load sounds
   fire = loadSound("sounds/fire.mp3");
   themeSong = loadSound("sounds/themesong.mp3");
@@ -100,8 +103,6 @@ let stageCount = 1;
 //variables for the "round" the enemies does when entering the screen
 let radius = 40;
 let speed = 0.1;
-let done = false;
-let doneCount;
 
 //time tracking
 let currentFrame;
@@ -132,8 +133,7 @@ function setup() {
   textFont("galagaFont");
   noCursor();
 
-  //Load video
-  film = createVideo("video/trailer.mp4");
+  //Sets the videos starting point and hides it
   film.time(88);
   film.hide();
 
@@ -157,6 +157,7 @@ function setup() {
   //initializes the timer for the powerup drop
   powerTimer = millis();
 
+  //sets the currentScene to 0 which is the intro splash screen
   currentScene = 0;
 
   starGenerator();
@@ -165,7 +166,6 @@ function setup() {
 function draw() {
   background("black");
 
-
   sceneSelector();
 
   //the white border around the canvas
@@ -173,8 +173,8 @@ function draw() {
   stroke("white");
   rect(1, 1, width-1, height-1);
   noStroke();
-  videoHandler();
 
+  videoHandler();
 }
 
 //This function selects the scene to display according to what the currentScene variable is set to
@@ -360,12 +360,10 @@ function explosionHandler(){
 //This function is essentially the same as the explosionHandler() function, except it takes care of 
 //showing the animation caused when the player is hit by an enemy. It is also used to show the 
 //animation of the explosion created when the boss is killed
-function playerHitHandler(){
-  for(let i=0; i<playerHitList.length; i++){
-    if(frameCount<playerHitList[i]+60){
-      playerHitGroup[i].changeAnimation("explode");
-    }
-    else{
+function playerHitHandler() {
+  for (let i = 0; i < playerHitList.length; i++) {
+    if (frameCount < playerHitList[i] + 60) playerHitGroup[i].changeAnimation("explode");
+    else {
       playerHitGroup[i].remove();
       playerHitList.shift();
     }
@@ -429,6 +427,8 @@ function waveHandler() {
        atrList = [];
        enemyGroup.removeSprites();
        enemies.removeSprites();
+       playerHitGroup.removeSprites();
+       playerHitList = [];
        angles = [];
        completes = [];
        rounds = [];
@@ -473,6 +473,7 @@ function reset(){
   completes = [];
   rounds = [];
   explosionList = [];
+  playerHitList = [];
 
   loopCount1 = 0;
 
@@ -511,6 +512,7 @@ function reset(){
   playVideo = false;
 }
 
+//handles playing the intro video and stops it after a certain time has passed, redirecting the player to the menu scene
 function videoHandler() {
   if(playVideo){
     image(film, 0, 0);
@@ -562,7 +564,8 @@ function keyReleased() {
   }
 }
 
-
+//p5.js function that checks when keys are pressed, i have used it to check when the player shoots, adding a shot to the shotGroup
+//I also use it to check if the player does a backspace in the game over scene.
 let backBool = true;
 function keyPressed() {
   if (currentScene == 2 && playing && keyCode === 32){
@@ -590,6 +593,7 @@ function keyPressed() {
   }
 }
 
+//Does what i says, moves the player when the player is on currentScene 2 (the game scene) as the player uses either the right or left arrow keys
 function movePlayer() {
   if(currentScene == 2){
     if (playing){
@@ -599,6 +603,7 @@ function movePlayer() {
   }
 }
 
+//Fetches the start screen image and adds that and some additional text to the loading screen
 function drawLoadingScreen() {
   image(startScreen, 0, 0);
 
@@ -611,6 +616,7 @@ function drawLoadingScreen() {
   strokeWeight(1);
 }
 
+//Draws the main menu and uses a switch/case to handle the navigation throughout the main menu scene.
 function drawMainMenu() {
   image(logo, 0, 0);
   fill("white");
@@ -634,6 +640,8 @@ function drawMainMenu() {
   }
 }
 
+//When the player() function is called initially the playing boolean is set to false and it will therefore create a new player sprite
+//This function will create a new player until the reset() function is called, resetting the playing boolean.
 function player() {
   if(playing == false){
     currentPlayer = createSprite(playerX, 550);
@@ -666,6 +674,8 @@ function shotHandler() {
   }
 }
 
+//Handles all the shots fired by enemies, and it checks wether or not the player is hit by these shots. If the player is hit it removes a life from the player
+//and creates a new "explosion" where the player was hit. It also removes the shots when they reach the bottom of the screen.
 function enemyShotHandler(){
   for(let i=0; i<enemyShots.length; i++){
     enemyShots[i].position.y += 5;
@@ -674,6 +684,7 @@ function enemyShotHandler(){
       enemyShots[i].remove();
       lives--;
 
+      //Adds the hit-explosion animation
       let thisPlayerHit = createSprite(currentPlayer.position.x, currentPlayer.position.y);
       thisPlayerHit.addAnimation("explode", playerHit);
       playerHitGroup.add(thisPlayerHit);
@@ -682,6 +693,8 @@ function enemyShotHandler(){
   }
 }
 
+//Handles the large shots fired by the boss sprite, if the boss hits the player, the player is instantly killed, 
+//meaning the player lives are set to 0 when this happens.
 function bossShotHandler(){
   for(let i=0; i<bossShots.length; i++){
     bossShots[i].position.y += 5;
@@ -699,22 +712,25 @@ function bossShotHandler(){
 }
 
 
-//Generates a predefined amount of enemies
-function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
-
+//Generates a certain amount of enemies according to what the player put in the "amount" parameter. the parameters include a start x and y value for the enemies
+// as well as the desired animation the enemies will use. The nextAttraction point is used to set the initial point where enemies will move towards.
+function enemyGenerator(amount, startX, startY, enemyAnimation, nextAttraction){
   for(let i=0; i<amount; i++){
     let thisSprite = createSprite(startX, startY);
     thisSprite.scale = 0.3;
 
+    //Adds all the possible animations, then changeAnimation sets the animation chosen in the function call
     thisSprite.addAnimation("first", enemyAnim);
     thisSprite.addAnimation("second", enemyAnim2);
     thisSprite.addAnimation("third", enemyAnim3);
     
-    thisSprite.changeAnimation(enemyImg);
+    thisSprite.changeAnimation(enemyAnimation);
     
     thisSprite.friction = 0.1;
     enemyGroup.add(thisSprite);
 
+    //The first 15 enemies has to start their "spin-round" on angle 0, while the enemies coming from the top
+    //starts at angle=4.5
     if(i<=15) append(angles, 0);
     else{
       append(angles, 4.5);
@@ -729,6 +745,7 @@ function enemyGenerator(amount, startX, startY, enemyImg, nextAttraction){
   }
 }
 
+//This function handles the spinning section of the round the enemies do when entering the screen
 function spinner(n, centerX, centerY, spinWay){
   xlist[n] = centerX + radius * cos(angles[n]);
   ylist[n] = centerY + radius * sin(angles[n]);
@@ -736,8 +753,11 @@ function spinner(n, centerX, centerY, spinWay){
   angles[n] = angles[n] + speed;
 }
 
-
-function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
+//The enemies entering the screen from the bottom part of the screen go through this function.
+//The parameters are n (enemy-number), y and x (y is used for checking if the enemy has reached a certain y value before starting the "spinning motion")
+//(x is used with y to set the attraction point after the spinning round is done), centerX and centerY sets the center point of the circle the enemies spin around
+//firstCondition sets the condition for where the enemies must have travelled to before starting the spinning motion.
+function firstWave(n, y, x, centerX, centerY, firstCondition){
   if(completes[n]) return true;
   else{
     //after the circular motion spot has been hit (rounds(n) set to true when this happens)
@@ -760,11 +780,6 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
     if(round(enemyGroup[n].position.y) <= y){
       enemyGroup[n].setSpeed(0);
 
-      if(!done){
-        done = true;
-        doneCount = frameCount + 300;
-      }
-
       enemies.add(enemyGroup[n]);
       completes[n] = true;
       return true;
@@ -779,6 +794,8 @@ function firstWave(n, y, x, centerX, centerY, firstCondition, secondCondition){
   }
 }
 
+//Same as the firstWave function, except this function is altered for enemies coming from the top of the screen insted of the bottom
+//The parameters are the same as firstWave, but this has a secondCondition for checking if the enemy has reached a certain y position
 function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition){
   if(completes[n]) return true;
   else{
@@ -817,8 +834,12 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
   }
 }
 
+//This function handles the movements of the enemies that are done with the lap they perform when entering the screen.
+//They simply move from one side of the screen to the other, where the left-boolean makes all the enemies move in a similar pattern
 let dontEnter = true;
 function enemyHandler() {
+  //randomShot finds a random number between 0 and 1000 and if the number matches the index of the enemy currently being iterated 
+  //that enemy will fire a shot. This adds an element of randomness to the game making it feel more dynamic
   let randomShot = round(random(0, 1000));
     for(let i=0; i<enemies.length; i++){
       if(i==randomShot && enemies[i].position.y < height){
@@ -837,27 +858,33 @@ function enemyHandler() {
           if(enemies[i].position.x >= 100) enemies[i].position.x -= 0.5;
           else left = true;
         }
+      //all three player shot groups must be checked to see if a player has hit an enemy, the powerShotLeft and Right check for hits 
+      //when the player is powered up
       enemyHit(enemies[i], shots, 400, 1000, i);
       enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);     
       enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
     }
 }
 
-function enemyHit(currentGroup, shotGroup, moveToX, moveToY, n) {
-  if(currentGroup.overlap(shotGroup)) {
+//enemyHit checks if enemies have been hit by the players shots.
+//Parameters: currentEnemy is the current enemy being checked, shotGroup is the shotgroup being checked (either normal shots or powered up shots), 
+//moveToX and moveToY is the place the enemy being hit is moved to temporarily before every enemy is removed at the same time when the stage is over.
+//n is simply the enemy index
+function enemyHit(currentEnemy, shotGroup, moveToX, moveToY, n) {
+  if(currentEnemy.overlap(shotGroup)) {
     enemyDead.play();
     currentScore+=100;
     for(let j=0; j<shotGroup.length; j++){
-      if(shotGroup[j].overlap(currentGroup)) shotGroup[j].remove();
+      if(shotGroup[j].overlap(currentEnemy)) shotGroup[j].remove();
     }
 
-    let thisExplosion = createSprite(currentGroup.position.x, currentGroup.position.y);
+    let thisExplosion = createSprite(currentEnemy.position.x, currentEnemy.position.y);
     thisExplosion.addAnimation("regular", explosion);
     explosionGroup.add(thisExplosion);
     append(explosionList, frameCount);
 
-    currentGroup.position.x = moveToX;
-    currentGroup.position.y = moveToY;
+    currentEnemy.position.x = moveToX;
+    currentEnemy.position.y = moveToY;
     atrList[n] = [moveToX, moveToY];
     enemyCounter--;
   }
