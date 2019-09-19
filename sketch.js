@@ -7,7 +7,7 @@ let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion, playerHit, dive
 //JSON objects
 let leaderboardJSON;
 //sounds used
-let fire, themeSong, levelStart, enemyDead, enemyCapture, coin;
+let fire, themeSong, levelStart, enemyDead, enemyCapture, coin, hit, powerSound;
 
 function preload() {
   //Load images
@@ -42,6 +42,8 @@ function preload() {
   enemyDead = loadSound("sounds/enemydead.mp3");
   enemyCapture = loadSound("sounds/enemycapture.mp3");
   coin = loadSound("sounds/coin.mp3");
+  hit = loadSound("sounds/hit.mp3");
+  powerSound = loadSound("sounds/powerup.mp3");
 }
 
 //Scene variables
@@ -126,7 +128,7 @@ let starColors = [[255, 0, 0], [0, 0, 255], [0, 128, 0], [64, 224, 208], [255, 2
 let initial = true;
 
 //Constants, if the program does not run smoothly on your computer you may reduce the star amount, creating fewer stars.
-const STAR_AMOUNT = 300;
+const STAR_AMOUNT = 150;
 
 function setup() {
   createCanvas(1000, 600);
@@ -229,7 +231,7 @@ function drawGame() {
 //before sending a new one out.
 function powerupHandler() {
   if(!poweredUp){
-    if(millis() > powerTimer + 10000){
+    if(millis() > powerTimer + 13000){
       powerGroup.removeSprites();
       let randX = random(100, width-300);
       let powerSprite = createSprite(randX, -20);
@@ -244,12 +246,13 @@ function powerupHandler() {
         powerTimer = millis();
         powerGroup.removeSprites();
         poweredUp = true;
+        powerSound.play();
       }
     }
   }
   else{
     if(millis() > powerTimer + 5000){
-      powerTimer = millis() + 15000;
+      powerTimer = millis() + 18000;
       poweredUp = false;
     }
     else return true;
@@ -333,6 +336,7 @@ function bossFight() {
         thisBossHit.scale = 3;
         playerHitGroup.add(thisBossHit);
         append(playerHitList, frameCount);
+        hit.play();
         
         bossGroup[0].remove();
 
@@ -518,6 +522,10 @@ function videoHandler() {
     image(film, 0, 0);
     film.size(width, height);
     film.loop();
+    fill("white");
+    textSize(15);
+    text("press space to skip video", width/3, height-10);
+    noFill();
     if(frameCount > videoCount + 800){
       film.hide();
       currentScene = 1;
@@ -536,6 +544,13 @@ function keyReleased() {
     playVideo = true;
     videoCount = frameCount;
   } 
+  //allows the player to skip the intro video
+  else if(playVideo && keyCode === 32){
+    film.hide();
+    currentScene = 1;
+    playVideo = false;
+    film.time(88);
+  }
   //Takes care of navigation on the menu screen
   else if (currentScene == 1){
     if (keyCode === DOWN_ARROW && (menuArrow == 1 || menuArrow == 2)) menuArrow++;
@@ -689,6 +704,7 @@ function enemyShotHandler(){
       thisPlayerHit.addAnimation("explode", playerHit);
       playerHitGroup.add(thisPlayerHit);
       append(playerHitList, frameCount);
+      hit.play();
     }
   }
 }
@@ -707,6 +723,7 @@ function bossShotHandler(){
       thisPlayerHit.addAnimation("explode", playerHit);
       playerHitGroup.add(thisPlayerHit);
       append(playerHitList, frameCount);
+      hit.play();
     }
   }
 }
