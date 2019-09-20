@@ -468,7 +468,7 @@ function waveHandler() {
     }
   }
 
-  if(!dive && enemyCounter == 5) divers(diveCount);
+  if(!dive && enemyCounter <= 5) divers(diveCount);
   //resets everything if the player has died
   if(enemyCounter == 0){
        //Reset wave variables
