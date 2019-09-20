@@ -394,7 +394,7 @@ function divers(n) {
     enemyCounter++;
   }
   dive = true;
-  if(diveCount < 10) diveCount += 2;
+  if(diveCount < 15) diveCount += 2;
 }
 
 function diverHandler(){
@@ -553,6 +553,7 @@ function reset(){
   enemyMoveSpeed = 0.5;
 
   dive=false;
+  diveCount = 3;
 
   username = "";
   backBool = true;
@@ -908,35 +909,64 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
 //This function handles the movements of the enemies that are done with the lap they perform when entering the screen.
 //They simply move from one side of the screen to the other, where the left-boolean makes all the enemies move in a similar pattern
 let dontEnter = true;
+let down = false;
+let nextY = 0;
 function enemyHandler() {
   //randomShot finds a random number between 0 and 1000 and if the number matches the index of the enemy currently being iterated 
   //that enemy will fire a shot. This adds an element of randomness to the game making it feel more dynamic
   let randomShot = round(random(0, enemyShotRate));
-    for(let i=0; i<enemies.length; i++){
-      if (enemies[i].position.y < height){
-        if(i==randomShot){
-          let newShot = createSprite(enemies[i].position.x, enemies[i].position.y);
-          fire.play();
-          newShot.addImage(enemyShot);
-          newShot.scale = 0.3;
-          enemyShots.add(newShot);
-        }
-        if(left){
-            if(enemies[i].position.x < 700) enemies[i].position.x += enemyMoveSpeed;
-            else left = false;
-          }
-  
-        else{
-            if(enemies[i].position.x >= 100) enemies[i].position.x -= enemyMoveSpeed;
-            else left = true;
-          }
-        //all three player shot groups must be checked to see if a player has hit an enemy, the powerShotLeft and Right check for hits 
-        //when the player is powered up
-        enemyHit(enemies[i], shots, 400, 1000, i);
-        enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);     
-        enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
+  for (let i = 0; i < enemies.length; i++) {
+    if (enemies[i].position.y < height + 100) {
+      if (i == randomShot) {
+        let newShot = createSprite(enemies[i].position.x, enemies[i].position.y);
+        fire.play();
+        newShot.addImage(enemyShot);
+        newShot.scale = 0.3;
+        enemyShots.add(newShot);
       }
+      //When left is true the enemies move towards the left side of the screen and left=false means right. When they change from left
+      //to right and vice versa the down-boolean also changes to true, and the enemies move down the screen towards the player for a bit until the
+      //nextY variabel gets to 20. This means the fewer enemies left, the further the enemies move down the screen before stopping.
+      if (left) {
+        if (down) {
+          enemies[i].attractionPoint(0.1, enemies[i].position.x, height);
+          nextY += 0.05;
+          if (nextY >= 20) down = false;
+        }
+        if (enemies[i].position.x < 700) enemies[i].position.x += enemyMoveSpeed;
+        else {
+          nextY = 0;
+          down = true;
+          left = false;
+        }
+      }
+      else {
+        if (down) {
+          enemies[i].attractionPoint(0.1, enemies[i].position.x, height);
+          nextY += 0.05;
+          if (nextY >= 20) down = false;
+        }
+        if (enemies[i].position.x >= 100) enemies[i].position.x -= enemyMoveSpeed;
+        else {
+          nextY = 0;
+          down = true;
+          left = true;
+        }
+      }
+      if (enemies[i].position.y > height - 50) {
+        enemies[i].attractionPoint(0.1, enemies[i].position.height - 30);
+        if (enemies[i].position.y > height - 10);
+        enemies[i].remove;
+        enemyCounter--;
+        lives--;
+      }
+      //all three player shot groups must be checked to see if a player has hit an enemy, the powerShotLeft and Right check for hits 
+      //when the player is powered up
+      enemyHit(enemies[i], shots, 400, 1000, i);
+      enemyHit(enemies[i], powerShotGroupLeft, 400, 1000, i);
+      enemyHit(enemies[i], powerShotGroupRight, 400, 1000, i);
     }
+  }
 }
 
 //enemyHit checks if enemies have been hit by the players shots.
@@ -1011,30 +1041,27 @@ function drawLeaderboard() {
   //it also sorts the current players score and places it in the leaderboard 
   let used = false;
   for(let i=0; i<=leaderboardJSON.players.length; i++){
+    fill(leaderboardJSON.colors[i]);
     //if the player has not yet played only this if-sentence will be executed to ensure the json data is the only data used in the leaderboard
     if(currentPlayerStats[0] == undefined){
       if(i == leaderboardJSON.players.length) continue;
-      fill(leaderboardJSON.colors[i]);
       text("NO."+ (i+1)+"  " +leaderboardJSON.players[i].name, 70, 180+i*50);
       text(" - Score: "+leaderboardJSON.players[i].score, 320, 180+i*50);
       text(" - Stage " + leaderboardJSON.players[i].stage, 680, 180+i*50);
       continue;
     }
     if(used){
-      fill(leaderboardJSON.colors[i]);
       text("NO."+ (i+1)+"  " +leaderboardJSON.players[i-1].name, 70, 180+i*50);
       text(" - Score: "+leaderboardJSON.players[i-1].score, 320, 180+i*50);
       text(" - Stage " + leaderboardJSON.players[i-1].stage, 680, 180+i*50);
     }
     else if(i == leaderboardJSON.players.length || leaderboardJSON.players[i].score <= currentPlayerStats[1]){
-      fill(leaderboardJSON.colors[i]);
       text("NO."+ (i+1)+"  " +currentPlayerStats[0], 70, 180+i*50);
       text(" - Score: "+currentPlayerStats[1], 320, 180+i*50);
       text(" - Stage " + currentPlayerStats[2], 680, 180+i*50);
       used = true;
     }
     else{
-      fill(leaderboardJSON.colors[i]);
       text("NO."+ (i+1)+"  " +leaderboardJSON.players[i].name, 70, 180+i*50);
       text(" - Score: "+leaderboardJSON.players[i].score, 320, 180+i*50);
       text(" - Stage " + leaderboardJSON.players[i].stage, 680, 180+i*50);
