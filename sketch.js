@@ -27,7 +27,7 @@ function preload() {
   enemyAnim3 = loadAnimation("images/third_anim/enemy00.png", "images/third_anim/enemy14.png");
   explosion = loadAnimation("images/death_anim/death00.png", "images/death_anim/death03.png");
   playerHit = loadAnimation("images/player_hit_anim/hit00.png", "images/player_hit_anim/hit03.png");
-  diver = loadAnimation("images/diver_anim/diver00.png", "images/diver_anim/diver01.png");
+  diverAnim = loadAnimation("images/diver_anim/diver00.png", "images/diver_anim/diver01.png");
 
   //Load JSON object
   leaderboardJSON = loadJSON("leaderboard.json");
@@ -152,11 +152,12 @@ function setup() {
   powerGroup = new Group();
   powerShotGroupLeft = new Group();
   powerShotGroupRight = new Group();
+  diverGroup = new Group();
 
   //sets an animation delay as the animated objects only have a few frames to switch between
   explosion.frameDelay = 10;
   playerHit.frameDelay = 20;
-  diver.frameDelay = 30;
+  diverAnim.frameDelay = 30;
 
   //initializes the timer for the powerup drop
   powerTimer = millis();
@@ -217,6 +218,7 @@ function drawGame() {
   explosionHandler();
   playerHitHandler();
 
+  diverHandler();
   enemyHandler();
   powerupHandler();
 
@@ -376,6 +378,44 @@ function playerHitHandler() {
   }
 }
 
+let diverGroup;
+let dive = false;
+let diveCount = 3;
+function divers(n) {
+  for (let i=0; i<n; i++){
+    let randomPos = random(100, 600);
+    let randomSpeed = random(0.5, 3);
+    let newDiver = createSprite(randomPos, -50);
+    newDiver.addAnimation("dive", diverAnim);
+    newDiver.changeAnimation("dive");
+    newDiver.scale = 3;
+    newDiver.friction = 0.1;
+    diverGroup.add(newDiver);
+    enemyCounter++;
+  }
+  dive = true;
+  if(diveCount < 10) diveCount += 2;
+}
+
+function diverHandler(){
+  for (let i=0; i<diverGroup.length; i++){
+    diverGroup[i].attractionPoint(0.3, currentPlayer.position.x, currentPlayer.position.y);
+    diverGroup[i].displace(diverGroup);
+    if(diverGroup[i].overlap(shots) || diverGroup[i].overlap(powerShotGroupRight) || diverGroup[i].overlap(powerShotGroupLeft)){
+      for(let j=0; j<shots.length; j++) if(shots[j].overlap(diverGroup[i])) shots[j].remove();
+      for(let j=0; j<powerShotGroupLeft.length; j++) if(powerShotGroupLeft[j].overlap(diverGroup[i])) powerShotGroupLeft[j].remove();
+      for(let j=0; j<powerShotGroupLeft.length; j++) if(powerShotGroupLeft[j].overlap(diverGroup[i])) powerShotGroupLeft[j].remove();
+      diverGroup[i].remove();
+      enemyCounter--;
+    } 
+    else if(diverGroup[i].overlap(currentPlayer)){
+      diverGroup[i].remove();
+      enemyCounter--;
+      lives--;
+    }
+  }
+}
+
 //This function creates a set of enemies for each regular stage and initializes the correct functions for them at the right time
 function waveHandler() {
   if(!playing){
@@ -427,12 +467,15 @@ function waveHandler() {
       }
     }
   }
+
+  if(!dive && enemyCounter == 5) divers(diveCount);
   //resets everything if the player has died
   if(enemyCounter == 0){
        //Reset wave variables
        atrList = [];
        enemyGroup.removeSprites();
        enemies.removeSprites();
+       diverGroup.removeSprites();
        playerHitGroup.removeSprites();
        playerHitList = [];
        angles = [];
@@ -446,6 +489,8 @@ function waveHandler() {
        stageCount++;
        if(enemyShotRate > 100) enemyShotRate -= 150;
    
+       dive = false;
+
        //Reset boss variables
        boss=true;
        bossGroup = new Group();
@@ -495,6 +540,7 @@ function reset(){
   bossShots.removeSprites();
   explosionGroup.removeSprites();
   playerHitGroup.removeSprites();
+  diverGroup.removeSprites();
 
   menuArrow = 1;
   lives = 3;
@@ -505,6 +551,8 @@ function reset(){
   currentPlayer.remove();
   enemyShotRate = 1000;
   enemyMoveSpeed = 0.5;
+
+  dive=false;
 
   username = "";
   backBool = true;
