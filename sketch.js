@@ -1,3 +1,5 @@
+/* ---- PRELOAD VARIABLES ---- */
+
 //images used
 let ship1, ship2, heart, shot, enemyShot, startScreen, logo, powerup;
 //The video
@@ -33,7 +35,7 @@ function preload() {
   leaderboardJSON = loadJSON("leaderboard.json");
 
   //Loads the video
-  film = createVideo("video/trailer.mp4");
+  film = createVideo("video/trailer_main.mp4");
 
   //Load sounds
   fire = loadSound("sounds/fire.mp3");
@@ -45,6 +47,8 @@ function preload() {
   hit = loadSound("sounds/hit.mp3");
   powerSound = loadSound("sounds/powerup.mp3");
 }
+
+/* ---- GLOBAL VARIABLES ---- */
 
 //Scene variables
 const LOADING_SCENE = 0;
@@ -68,6 +72,7 @@ let username = "";
 
 //Sprite Groups
 let shots;
+let enemyGroup;
 let enemies;
 let enemyShots;
 let bossGroup;
@@ -79,12 +84,10 @@ let powerShotGroupLeft;
 let powerShotGroupRight;
 
 //enemy variables
-let left = false;
 let enemyCounter;
 let enemyShotRate = 1000;
 let enemyMoveSpeed = 0.5;
 let atrList = [];
-let enemyGroup;
 let angles = [];
 let completes = [];
 let rounds = [];
@@ -92,6 +95,11 @@ let xlist = [];
 let ylist = [];
 let last = [];
 let dead = [];
+//Enemyhandler
+let dontEnter = true;
+let down = false;
+let nextY = 0;
+let left = false;
 
 //Boss variables
 let boss = false;
@@ -129,6 +137,11 @@ let starList = [];
 let starColors = [[255, 0, 0], [0, 0, 255], [0, 128, 0], [64, 224, 208], [255, 255, 255], [128, 0, 128], [255, 255, 0]];
 let initial = true;
 
+//Diver enemy variables
+let diverGroup;
+let dive = false;
+let diveCount = 3;
+
 //Constants, if the program does not run smoothly on your computer you may reduce the star amount, creating fewer stars.
 const STAR_AMOUNT = 150;
 
@@ -138,7 +151,6 @@ function setup() {
   noCursor();
 
   //Sets the videos starting point and hides it
-  film.time(88);
   film.hide();
 
   //initializes all the sprite groups
@@ -229,7 +241,6 @@ function drawGame() {
 
   if(lives<=0) currentScene=4;
 }
-
 
 //This function sends out a powerup at certain points, if the player gets one it waits for a while
 //before sending a new one out.
@@ -333,6 +344,7 @@ function bossFight() {
         waveFrame = frameCount;
         boss = false;
         firstBoss = false;
+        left=true;
         currentScore+=990;
 
         let thisBossHit = createSprite(bossGroup[0].position.x, bossGroup[0].position.y);
@@ -378,9 +390,7 @@ function playerHitHandler() {
   }
 }
 
-let diverGroup;
-let dive = false;
-let diveCount = 3;
+//This function creates an amount of diver enemies as specified in the input parameter and gives them a random starting position.
 function divers(n) {
   for (let i=0; i<n; i++){
     let randomPos = random(100, 600);
@@ -397,6 +407,8 @@ function divers(n) {
   if(diveCount < 15) diveCount += 2;
 }
 
+//This functions handles everything about the divers, if they are hit by the player they are removed, and if they hit the player they are removed
+//but the player loses a life. They also displace each other to not be on top of each other.
 function diverHandler(){
   for (let i=0; i<diverGroup.length; i++){
     diverGroup[i].attractionPoint(0.3, currentPlayer.position.x, currentPlayer.position.y);
@@ -405,10 +417,26 @@ function diverHandler(){
       for(let j=0; j<shots.length; j++) if(shots[j].overlap(diverGroup[i])) shots[j].remove();
       for(let j=0; j<powerShotGroupLeft.length; j++) if(powerShotGroupLeft[j].overlap(diverGroup[i])) powerShotGroupLeft[j].remove();
       for(let j=0; j<powerShotGroupLeft.length; j++) if(powerShotGroupLeft[j].overlap(diverGroup[i])) powerShotGroupLeft[j].remove();
+
+      //Adds the hit-explosion animation
+      let thisExplosion = createSprite(diverGroup[i].position.x, diverGroup[i].position.y);
+      thisExplosion.addAnimation("regular", explosion);
+      explosionGroup.add(thisExplosion);
+      append(explosionList, frameCount);
+
       diverGroup[i].remove();
+      enemyDead.play();
       enemyCounter--;
     } 
     else if(diverGroup[i].overlap(currentPlayer)){
+      //Adds the hit-explosion animation
+      let thisPlayerHit = createSprite(currentPlayer.position.x, currentPlayer.position.y);
+      thisPlayerHit.addAnimation("explode", playerHit);
+      playerHitGroup.add(thisPlayerHit);
+      append(playerHitList, frameCount);
+
+      hit.play();
+
       diverGroup[i].remove();
       enemyCounter--;
       lives--;
@@ -580,11 +608,12 @@ function videoHandler() {
     textSize(15);
     text("press space to skip video", width/3, height-10);
     noFill();
-    if(frameCount > videoCount + 800){
+    if(frameCount > videoCount + 870){
       film.hide();
       currentScene = 1;
       playVideo = false;
-      film.time(88);
+      film.pause();
+      film.time(0);
     }
   }
 }
@@ -603,7 +632,8 @@ function keyReleased() {
     film.hide();
     currentScene = 1;
     playVideo = false;
-    film.time(88);
+    film.pause();
+    film.time(0);
   }
   //Takes care of navigation on the menu screen
   else if (currentScene == 1){
@@ -722,7 +752,6 @@ function player() {
   }
 }
 
-
 //Handles the shots fired by the player, if the player is powered up it shoots three shots at the same time.
 function shotHandler() {
   for(let i=0; i<shots.length; i++){
@@ -750,7 +779,7 @@ function enemyShotHandler(){
     enemyShots[i].displace(enemyShots);
     enemyShots[i].position.y += 5;
     if(enemyShots[i].position.y > height) enemyShots[i].remove();
-    if(currentPlayer.overlap(enemyShots)) {
+    if(currentPlayer.collide(enemyShots)) {
       enemyShots[i].remove();
       lives--;
 
@@ -782,7 +811,6 @@ function bossShotHandler(){
     }
   }
 }
-
 
 //Generates a certain amount of enemies according to what the player put in the "amount" parameter. the parameters include a start x and y value for the enemies
 // as well as the desired animation the enemies will use. The nextAttraction point is used to set the initial point where enemies will move towards.
@@ -908,9 +936,6 @@ function waveFromTop(n, y, x, centerX, centerY, firstCondition, secondCondition)
 
 //This function handles the movements of the enemies that are done with the lap they perform when entering the screen.
 //They simply move from one side of the screen to the other, where the left-boolean makes all the enemies move in a similar pattern
-let dontEnter = true;
-let down = false;
-let nextY = 0;
 function enemyHandler() {
   //randomShot finds a random number between 0 and 1000 and if the number matches the index of the enemy currently being iterated 
   //that enemy will fire a shot. This adds an element of randomness to the game making it feel more dynamic
@@ -953,9 +978,19 @@ function enemyHandler() {
           left = true;
         }
       }
-      if (enemies[i].position.y > height - 50) {
+
+      if (enemies[i].position.y > height - 50 || enemies[i].overlap(currentPlayer)) {
         enemies[i].attractionPoint(0.1, enemies[i].position.height - 30);
         if (enemies[i].position.y > height - 10);
+        if(enemies[i].overlap(currentPlayer)){
+          //Adds the hit-explosion animation
+          let thisPlayerHit = createSprite(currentPlayer.position.x, currentPlayer.position.y);
+          thisPlayerHit.addAnimation("explode", playerHit);
+          playerHitGroup.add(thisPlayerHit);
+          append(playerHitList, frameCount);
+
+          hit.play();
+        }
         enemies[i].remove;
         enemyCounter--;
         lives--;
@@ -1090,4 +1125,3 @@ function gameStats() {
   //shows current powerup
   if(poweredUp) image(powerup, 800, 500, 30, 30);
 }
-
