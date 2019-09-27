@@ -9,7 +9,7 @@ let bossAnimation, enemyAnim, enemyAnim2, enemyAnim3, explosion, playerHit, dive
 //JSON objects
 let leaderboardJSON;
 //sounds used
-let fire, themeSong, levelStart, enemyDead, enemyCapture, coin, hit, powerSound;
+let fire, themeSong, levelStart, enemyDead, enemyCapture, hit, powerSound;
 
 function preload() {
   //Load images
@@ -43,7 +43,6 @@ function preload() {
   levelStart = loadSound("sounds/levelstart.mp3");
   enemyDead = loadSound("sounds/enemydead.mp3");
   enemyCapture = loadSound("sounds/enemycapture.mp3");
-  coin = loadSound("sounds/coin.mp3");
   hit = loadSound("sounds/hit.mp3");
   powerSound = loadSound("sounds/powerup.mp3");
 }
