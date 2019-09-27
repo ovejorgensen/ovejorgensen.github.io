@@ -517,6 +517,7 @@ function waveHandler() {
        if(enemyShotRate > 100) enemyShotRate -= 150;
    
        dive = false;
+       down = false;
 
        //Reset boss variables
        boss=true;
