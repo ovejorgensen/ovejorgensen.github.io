@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Portfolio</title>
+    <link rel="icon" href="static/images/icon.png">
+</head>
+<body>
+    <main>
+        <!-- BANNER SECTION -->
+        <div class="hero-image">
+            <!-- particles.js container -->
+            <div id="particles-js" class="particle"></div>
+            <div class="hero-text">
+                <h1 id="mainh1">Ove Jørgensen</h1>
+                <div class="content">
+                    <div class="content__container">
+                        <!-- <p class="content__container__text">pro</p> -->
+                        <ul class="content__container__list">
+                            <li class="content__container__list__item">student</li>
+                            <li class="content__container__list__item">entrepeneur</li>
+                            <li class="content__container__list__item">developer</li>
+                            <li class="content__container__list__item">traveller</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT ME -->
+        <div class="container">
+            <div class="row second">
+                <div class="col-lg-12 abouthead">
+                    <h2>About me</h2>
+                    <h6>Ove Kristian Jørgensen</h6>
+                </div>
+                <div class="col-lg-4">
+                    <img id="pbimg" src="static/images/classy.png">
+                </div>
+                <div class="col-lg-8 geninf">
+                    <h5>General information</h5>
+                    <p>Third year student of a bachelors degree in computer science at the University of Stavanger. Currently i'm doing an exchange semester at Griffith University in Australia where i'm having relevant computer courses before returning to Stavanger and starting to write my bachelor thesis this spring. </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIMELINE -->
+        <div class="timecontainer">
+                <div class="container timehead">
+                        <div class="row">
+                            <div class="col-lg-12 page-header">
+                                <h2 id="timeline">Timeline</h2>
+                            </div>
+                        </div>
+                        <ul class="timeline">
+                            <li>
+                                <div class="timeline-badge maincolor"><i class="fa fa-university"></i></div>
+                                <div class="timeline-panel">
+                                    <div class="timeline-heading">
+                                        <h4 class="timeline-title">Griffith University, Australia</h4>
+                                        <p class="text-muted">July 2019 - October 2019</p>
+                                    </div>
+                                    <div class="timeline-body">
+                                        <p>Exchange semester where i'm having courses in app-development, creative coding with p5.js, foundations of
+                                            systems development (project management) and human computer interaction. </p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="timeline-inverted">
+                                <div class="timeline-badge maincolor"><i class="fa fa-university"></i></div>
+                                <div class="timeline-panel">
+                                    <div class="timeline-heading">
+                                        <h4 class="timeline-title">Computer Science<br>University of Stavanger</h4>
+                                        <p class="text-muted">August 2019 - </p>
+                                    </div>
+                                    <div class="timeline-body">
+                                        <p>Bachelors in computer science where the key courses I have had is web-development, databases,
+                                            communication-technology and object-oriented programming as well as the standard engineering courses
+                                            (maths, statistics, physics and chemistry).</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="timeline-badge maincolor"><i class="fa fa-school"></i></div>
+                                <div class="timeline-panel">
+                                    <div class="timeline-heading">
+                                        <h4 class="timeline-title">Vågsbygd High School</h4>
+                                        <p class="text-muted">August 2014 - May 2016</p>
+                                    </div>
+                                    <div class="timeline-body">
+                                        <p>I achieved my general university admissions certification from Vågsbygd High School.</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+        </div>
+
+
+        <!-- SKILLS -->
+        <div class="skillcontainer">
+            <div class="row">
+                <div id="progtext" class="col-lg-12">
+                    <h3>Programming languages and tools</h3>
+                    <h6>Skillset</h6>
+                </div>
+            </div>
+            <div class="container-fluid iconcontainer">
+                <div class="row iconrow">
+                    <div class="col">
+                        <ul class="list-inline">
+                            <li class="list-inline-item">
+                                <i class="fab fa-html5"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-css3"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-js"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-python"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-bootstrap"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-android"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fa fa-database"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-less"></i>
+                            </li>
+                            <li class="list-inline-item">
+                                <i class="fab fa-java"></i>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="timecontainer">
+            <div class="container project-container">
+                <div class="row second">
+                    <div class="col-lg-12 abouthead">
+                        <h2>My Projects</h2>
+                    </div>
+                </div>
+                <ul class="grid">
+                    <li>
+                        <figure>
+                            <img src="static/images/galagathumbnail.PNG">
+                            <figcaption>
+                                <h3>Galaga</h3>
+                                <span>JavaScript and p5.js</span>
+                                <button class="btn btn-primary modalBtn">Try it!</button>
+                            </figcaption>
+                        </figure>
+                    </li>
+                    <li>
+                        <figure>
+                            <img src="static/images/sitethumbnail.PNG">
+                            <figcaption>
+                                <h3>This Site</h3>
+                                <span>Portfolio project</span>
+                                <button class="btn btn-primary siteModal">Learn more</button>
+                            </figcaption>
+                        </figure>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Galaga game, place inside wanted parent div-->
+        <div id="galaga-modal">
+            <div id="galaga-modal-inner">
+                <div id="galaga-div" class="container">
+                    <script src="galaga/sketch.js"></script>
+                </div>
+                <div class="info-box">
+                    <div class="title">Galaga</div>
+                    <div class="tag">RETRO GAME</div>
+                    <div class="detail">A remake of the classic arcade game, written purely in JavaScript and p5.js, feel free to try it out by pressing space!
+                    </div>
+                    <p class="source-link">Source code at the <a href="https://www.github.com/ovejorgensen/ovejorgensen.github.io" target="_blank">Github Repository</a> </p>
+                </div>
+                <div class="close"><i class="fa fa-times fa-2x"></i></div>
+            </div>
+        </div>
+        <div id="site-modal">
+            <div id="site-modal-inner">
+                <img src="static/images/pagemodal.JPG">
+                <div class="info-box">
+                    <div class="title">Portfolio</div>
+                    <div class="tag">WEBSITE</div>
+                    <div class="detail">Website created with Bootstrap, JavaScript, jQuery and some less.js including HTML and CSS.
+                    </div>
+                    <p class="source-link">Source code at the <a href="https://www.github.com/ovejorgensen/portfolio-website" target="_blank">Github Repository</a> </p>
+                </div>
+                <div class="close"><i class="fa fa-times fa-2x"></i></div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+        <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <ul class="list-inline socialicons">
+                            <li class="list-inline-item">
+                                <a href="https://www.facebook.com/ovekjorgensen" target="_blank">
+                                    <i class="fab fa-facebook-square fa-4x"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://www.github.com/ovejorgensen" target="_blank">
+                                    <i class="fab fa-github-square fa-4x"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://www.linkedin.com/in/ovejorgensen" target="_blank">
+                                    <i class="fab fa-linkedin fa-4x"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="copyright"> © 2019 Ove Jørgensen, All Rights Reserved.</p>
+            </div>
+        </footer>
+    </main>
+
+    <!-- scripts and stylesheets at the end for faster page loading -->
+    <link rel="stylesheet/less" type="text/css" href="static/style.less" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet"> <!-- Loads the Montserrat font-->
+    <link rel="stylesheet" href="static/listroller.css">
+    <link rel="stylesheet" href="static/timeline.css">
+
+    <script src="http://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="static/particle.js"></script>
+
+    <link href="static/fontawesome/css/all.min.css" rel="stylesheet"> <!--loads fontawesome stylesheet -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"> <!-- Loads bootstrap stylesheet-->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/3.9.0/less.min.js" ></script>  <!-- Loads less.js -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script> <!-- Loads jQuery -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> <!-- Loads Bootstraps js file-->
+
+    <script src="static/script.js"></script>
+
+    <script src="static/modernizr.custom.js"></script>
+
+    <script src="galaga/p5.js"></script>
+    <script src="galaga/lib/p5.play.js"></script>
+    <script src="galaga/p5.dom.js"></script>
+    <script src="galaga/p5.sound.js"></script>
+</body>
+</html>
