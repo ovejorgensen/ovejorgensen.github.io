@@ -1,5 +1,5 @@
 # ovejorgensen.github.io
 
-This project is made as part of a creative coding class, the game is made purely in p5.js and JavaScript.
+Source code for my portfolio website.
 
-Try out the game by visiting "ovejorgensen.github.io"
+Check it out by visiting "ovejorgensen.github.io".
