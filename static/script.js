@@ -17,6 +17,6 @@ $(document).ready(function () {
     //Fixes bug causing particles.js to not display properly
     setTimeout(function(){ 
         window.dispatchEvent(new Event('resize'));
-     }, 0);
+     }, 50);
 
 });
