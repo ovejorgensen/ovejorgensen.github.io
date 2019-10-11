@@ -4,7 +4,10 @@ main, html, body {
     margin: 0;
     padding: 0;
     font-size: 100%;
-    overflow-x: hidden;
+}
+
+html.sr .load-hidden {
+  visibility: hidden;
 }
 
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
@@ -144,8 +147,11 @@ canvas {
 
 .skillcontainer {
   margin-top: 50px;
-  width: 100%;
   text-align: center;
+}
+
+#progtext {
+  width: 80%;
 }
 
 .langrow {

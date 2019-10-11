@@ -19,4 +19,9 @@ $(document).ready(function () {
         window.dispatchEvent(new Event('resize'));
      }, 50);
 
+     ScrollReveal().reveal(".skillcontainer", {delay: 500});
+     ScrollReveal().reveal(".timecontainer", {delay: 500});
+     ScrollReveal().reveal(".project-container", {delay: 1000});
+     ScrollReveal().reveal("#grid1", {delay: 1200});
+     ScrollReveal().reveal("#grid2", {delay: 1400});
 });
