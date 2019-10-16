@@ -15,7 +15,8 @@
             <!-- particles.js container -->
             <div id="particles-js" class="particle"></div>
             <div class="hero-text">
-                <h1 id="mainh1">Ove Jørgensen</h1>
+                <div class=" hidden-xs hidden-sm hidden-md"><h1 id="mainh1">Ove Jørgensen</h1></div>
+                <div class="hidden-lg hidden-xl"><h1 id="mainh1-small">Ove Jørgensen</h1></div>
                 <div class="content">
                     <div class="content__container">
                         <!-- <p class="content__container__text">pro</p> -->
@@ -147,10 +148,11 @@
                         <h2>My Projects</h2>
                     </div>
                 </div>
-                <ul class="grid">
+                <ul class="grid hidden-xs grid-small">
                     <li id="grid1">
                         <figure>
-                            <img src="static/images/galagathumbnail.PNG">
+                            <img class="hidden-xs normalGrid" src="static/images/galagathumbnail.PNG">
+                            <img class="hidden-sm hidden-md hidden-lg hidden-xl gridImg" src="static/images/galagathumbnail.PNG">
                             <figcaption>
                                 <h3>Galaga</h3>
                                 <span>JavaScript and p5.js</span>
@@ -160,7 +162,32 @@
                     </li>
                     <li id="grid2">
                         <figure>
-                            <img src="static/images/sitethumbnail.png">
+                            <img class="hidden-xs normalGrid" src="static/images/sitethumbnail.png">
+                            <img class="hidden-sm hidden-md hidden-lg hidden-xl gridImg" src="static/images/sitethumbnail.png">
+                            <figcaption>
+                                <h3>This Site</h3>
+                                <span>Portfolio project</span>
+                                <button class="btn btn-primary siteModal">Learn more</button>
+                            </figcaption>
+                        </figure>
+                    </li>
+                </ul>
+                <ul class="grid hidden-sm hidden-md hidden-lg hidden-xl grid-normal">
+                    <li id="grid1">
+                        <figure>
+                            <img class="hidden-xs normalGrid" src="static/images/galagathumbnail.PNG">
+                            <img class="hidden-sm hidden-md hidden-lg hidden-xl gridImg" src="static/images/galagathumbnail.PNG">
+                            <figcaption>
+                                <h3>Galaga</h3>
+                                <span>JavaScript and p5.js</span>
+                                <button class="btn btn-primary modalBtn">Try it!</button>
+                            </figcaption>
+                        </figure>
+                    </li>
+                    <li id="grid2">
+                        <figure>
+                            <img class="hidden-xs normalGrid" src="static/images/sitethumbnail.png">
+                            <img class="hidden-sm hidden-md hidden-lg hidden-xl gridImg" src="static/images/sitethumbnail.png">
                             <figcaption>
                                 <h3>This Site</h3>
                                 <span>Portfolio project</span>
@@ -172,23 +199,57 @@
             </div>
         </div>
 
-        <!-- Galaga game, place inside wanted parent div-->
-        <div id="galaga-modal">
+        <!-- Galaga game, place inside wanted parent div
+        <div class="container" id="galaga-modal">
             <div id="galaga-modal-inner">
-                <div id="galaga-div" class="container">
+                <div class="hidden-xs hidden-sm">
+                    <div id="galaga-div" class="container">
+                        <script src="galaga/sketch.js"></script>
+                    </div>
+                </div>
+                <div class="hidden-text hidden-lg hidden-xl">
+                    <p><i>Open the website on a computer (and maximise the browser window) to try out the game</i></p>
+                </div>
+                <div class="info-box">
+                    <div class="title">Galaga</div>
+                    <div class="tag">RETRO GAME</div>
+                    <div class="detail">A remake of the classic arcade game written purely in JavaScript and p5.js. Try it out by pressing space!
+                    </div>
+                    <p class="source-link">Source code at the <a href="https://www.github.com/ovejorgensen/ovejorgensen.github.io" target="_blank">Github Repository</a> </p>
+                </div>
+                <div class="close"><i class="fa fa-times fa-2x"></i></div>
+            </div>
+        </div> -->
+
+        <!-- Galaga game, place inside wanted parent div-->
+        <div class="container modal" id="galaga-modal">
+            <div id="galaga-modal-inner" class="hidden-sm hidden-xs">
+                <div id="galaga-div" class="container hidden-sm hidden-xs">
                     <script src="galaga/sketch.js"></script>
                 </div>
                 <div class="info-box">
                     <div class="title">Galaga</div>
                     <div class="tag">RETRO GAME</div>
-                    <div class="detail">A remake of the classic arcade game, written purely in JavaScript and p5.js, feel free to try it out by pressing space!
+                    <div class="detail">A remake of the classic arcade game written purely in JavaScript and p5.js.
+                    </div>
+                    <p class="source-link">Source code at the <a href="https://www.github.com/ovejorgensen/ovejorgensen.github.io" target="_blank">Github Repository</a> </p>
+                </div>
+                <div class="close"><i class="fa fa-times fa-2x"></i></div>
+            </div>
+            <div id="galaga-modal-inner-small" class="hidden-lg hidden-xl">
+                <p><i>Open the website on a computer (and maximise the browser window) to try out the game</i></p>
+                <div class="info-box">
+                    <div class="title">Galaga</div>
+                    <div class="tag">RETRO GAME</div>
+                    <div class="detail">A remake of the classic arcade game written purely in JavaScript and p5.js. Try it out by pressing space!
                     </div>
                     <p class="source-link">Source code at the <a href="https://www.github.com/ovejorgensen/ovejorgensen.github.io" target="_blank">Github Repository</a> </p>
                 </div>
                 <div class="close"><i class="fa fa-times fa-2x"></i></div>
             </div>
         </div>
-        <div id="site-modal">
+
+        <div class="modal" id="site-modal">
             <div id="site-modal-inner">
                 <img src="static/images/pagemodal.JPG">
                 <div class="info-box">
@@ -249,6 +310,7 @@
     <script src="static/script.js"></script>
 
     <script src="static/modernizr.custom.js"></script>
+    <script src="static/toucheffects.js"></script>
 
     <script src="galaga/p5.js"></script>
     <script src="galaga/lib/p5.play.js"></script>

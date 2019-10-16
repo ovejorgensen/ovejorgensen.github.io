@@ -3,16 +3,16 @@ $(document).ready(function () {
     $(".modalBtn").click(function () {
         $("#galaga-modal").fadeIn('slow');
     });
-    $(".close").click(function () {
-        $("#galaga-modal").fadeOut('slow');
-    });
 
     $(".siteModal").click(function () {
         $("#site-modal").fadeIn('slow');
     });
+
     $(".close").click(function () {
-        $("#site-modal").fadeOut('slow');
+        $(this).closest(".modal").fadeOut('slow');
     });
+
+    
 
     //Fixes bug causing particles.js to not display properly
     setTimeout(function(){ 
@@ -23,5 +23,5 @@ $(document).ready(function () {
      ScrollReveal().reveal(".timecontainer", {delay: 500});
      ScrollReveal().reveal(".project-container", {delay: 1000});
      ScrollReveal().reveal("#grid1", {delay: 1200});
-     ScrollReveal().reveal("#grid2", {delay: 1400});
+     ScrollReveal().reveal("#grid2", {delay: 1600});
 });

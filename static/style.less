@@ -96,17 +96,23 @@ h6, .h6 {
   }
 }
 
+#mainh1-small{
+  font-size: 35px;
+  letter-spacing: 10px;
+  color: white;
+  margin-bottom: 40px;
+}
+
   /* Place text in the middle of the image */
   .hero-text {
     text-align: center;
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
     z-index: 3;
   }
-
 
 
 /* ---- reset ---- */
@@ -178,6 +184,7 @@ canvas {
 }
 
 .grid {
+  left: 0;
 	padding: 20px 20px 100px 20px;
 	max-width: 1300px;
 	margin: 0 auto;
@@ -185,22 +192,33 @@ canvas {
   text-align: center;
   li {
     display: inline-block;
-    width: 400px;
     margin: 0;
     padding: 20px;
     text-align: left;
     position: relative;
+  }
+  .grid-small {
+    width: 100%;
+  }
+  .grid-normal {
+    width: 440px;
   }
 }
 
 figure {
 	margin: 0;
   position: relative;
-  img {
+  .normalGrid {
     display: block;
     position: relative;
     height: 250px;
     width: auto;
+  }
+  .gridImg{
+    display: block;
+    position: relative;
+    width: 100%;
+    height: auto;
   }
 }
 
@@ -218,8 +236,7 @@ figcaption {
 	backface-visibility: hidden;
 	transition: transform 0.3s, opacity 0.3s;
   h3 {
-    margin-top: 70px;
-    padding: 0;
+    padding: 30px 0 0 0;
     color: #fff;
   }
   a {
@@ -256,6 +273,12 @@ figcaption {
   top: 140px;
 }
 
+.hidden-text {
+  position: absolute;
+  top: 35%;
+  margin: auto 10% auto 10%;
+}
+
 #galaga-modal, #site-modal{
   display: none;
   background-color: rgba(0, 0, 0, 0.5);
@@ -266,12 +289,34 @@ figcaption {
   z-index: 10;
 }
 
-#galaga-modal-inner, #site-modal-inner {
+#galaga-modal-inner{
   background-color: white;
   width: 1000px;
-  height: 500px;
+  height: 700px;
   padding: 25px;
-  margin: 17% auto;
+  margin: 2% auto;
+  position: relative;
+}
+
+#galaga-modal-inner-small{
+  background-color: white;
+  height: 50%;
+  padding: 25px;
+  margin: 25% auto 25% auto;
+  position: relative;
+  p i {
+    z-index: 99;
+    position: absolute;
+    top: 30%;
+    width: 90%;
+  }
+}
+
+#site-modal-inner {
+  background-color: white;
+  height: 90%;
+  padding: 25px;
+  margin: 5% auto 5% auto;
   position: relative;
 }
 
@@ -287,8 +332,10 @@ figcaption {
 #galaga-div {
   font-family: galagaFont !important;
   position: absolute;
-  left: -15px;
-  top: -50%;
+  top: 0;
+  left: 0;
+  padding: 0;
+  z-index: 100;
 }
 .info-box{
   position: absolute;
@@ -298,13 +345,13 @@ figcaption {
 
 .title {
   position: absolute;
-  bottom: 60px;
+  bottom: 75px;
   font-size: 30px;
 }
 
 .tag {
   position: absolute;
-  bottom: 45px;
+  bottom: 60px;
   width: 90%;
   color: grey;
   border-bottom: 1px solid lightgrey;
@@ -312,6 +359,8 @@ figcaption {
 
 .detail {
   position: absolute;
+  margin: 40px 10% 10px 0;
+  padding-top: 20px;
   bottom: 10px;
 }
 
